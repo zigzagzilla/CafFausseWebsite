@@ -1,3 +1,5 @@
+import jamesWilliamsImage from '../assets/james-williams.png';
+
 const About = () => {
   return (
     <section className="py-20 bg-[#FCFBF7]">
@@ -74,7 +76,7 @@ const About = () => {
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1590072060070-3a247f7af357?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                src={jamesWilliamsImage}
                 alt="James Williams" 
                 className="w-full h-full object-cover" 
               />
