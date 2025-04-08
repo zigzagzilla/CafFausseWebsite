@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import ribeyeSteak from "@assets/gallery-ribeye-steak.webp";
 import cafeInterior from "@assets/gallery-cafe-interior.webp";
+import specialEvent from "@assets/gallery-special-event.webp";
 
 type GalleryCategory = "all" | "food" | "ambiance" | "events";
 
@@ -17,9 +18,9 @@ const galleryItems = [
   {
     id: 2,
     category: "food",
-    image: "https://images.unsplash.com/photo-1551529227-e8a5cf40c7ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     title: "Artful Dessert",
-    description: "Decadent tiramisu and cheesecake"
+    description: "Decadent tiramisu with coffee dusting"
   },
   {
     id: 3,
@@ -38,8 +39,8 @@ const galleryItems = [
   {
     id: 5,
     category: "events",
-    image: cafeInterior,
-    title: "Dining Room",
+    image: specialEvent,
+    title: "Events",
     description: "Perfect setting for elegant gatherings"
   },
   {
