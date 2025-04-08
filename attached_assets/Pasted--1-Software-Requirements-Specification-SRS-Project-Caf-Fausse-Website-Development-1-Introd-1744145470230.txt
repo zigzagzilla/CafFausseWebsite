@@ -1,0 +1,57 @@
+
+1
+ Software Requirements Specification (SRS)  Project:  Café Fausse Website Development 
+ 1. Introduction  1.1 Purpose 
+ This document defines the requirements for the Café Fausse Web Application. 
+ 1.2 Scope 
+ The Café Fausse Website is a responsive, full-stack web application that provides  information about the restaurant, displays the menu, allows customers to make table  reservations, and showcases awards and customer testimonials. The project will be  developed using React (with JSX) for the front-end, a Flask back-end, and a  PostgreSQL database for persistent data management. 
+ 2. Overall Description  2.1 Product Perspective 
+ The Café Fausse Web Application will serve as the digital front door for a fine-dining  establishment. It will combine a visually appealing React-based front-end with a robust  Flask back-end to handle table reservations and newsletter signup. A PostgreSQL  database will ensure reliable data storage for reservations and customer information. 
+ 2.2 Product Functions 
+ ●   Web Pages: 
+ o   Home Page:  Includes the restaurant’s name, contact  information, hours,  and navigational links. 
+ o   Menu Page:  Displays a detailed menu segmented by categories,  complete with descriptions and prices. 
+ o   Reservations Page:  Features a reservation form that  integrates with the  back-end reservation system. 
+ o   About Us Page:  Provides the restaurant’s history,  mission, and owner  profiles. 
+ o   Gallery Page:  Showcases restaurant images, awards,  and positive  customer reviews. 
+ ●   Email Newsletter Signup:  A form for visitors to subscribe to a newsletter. 
+ ●   Reservation System:  A fully functional back-end that  processes table bookings,  checks availability, and assigns tables. 
+ 2.3 User Characteristics 
+ ●   Restaurant Customers:  Users looking to learn about  the restaurant, view the  menu, and book reservations. 
+ ●   Administrators/Managers:  Responsible for site content  updates, menu  management, and reservation oversight. 
+ ●   Development Team:  Developers building both the front-end  and back-end  components. 
+ 2.4 Constraints 
+ ●   The front-end must be built using React and JSX. 
+ ●   Styling should employ either CSS Flexbox or Grid for responsive design. 
+ ●   The back-end must utilize Flask with a PostgreSQL database. 
+ ●   The website must function consistently across major browsers and mobile  devices. 
+ 2.5 Assumptions and Dependencies 
+ ●   The site will be hosted either locally or on a publicly accessible web server. 
+ ●   Users are expected to access the site using modern web browsers. 
+ ●   Proper configuration of React, Flask, and PostgreSQL environments is assumed. 
+ 3. Specific Requirements  3.1 Functional Requirements  3.1.1 Home Page 
+ ●   FR-1:  Display Café Fausse’s name prominently. 
+ ●   FR-2:  Show contact information and hours: 
+ o   Address:  1234 Culinary Ave, Suite 100, Washington,  DC 20002 
+ o   Phone Number:  (202) 555-4567 
+ o   Hours:  Monday–Saturday: 5:00PM – 11:00 PM; Sunday: 5:00 PM – 9:00  PM 
+ ●   FR-3:  Include high-quality images and a consistent  theme. 
+ ●   FR-4:  Provide navigation links to Menu, Reservations,  About Us, and Gallery  pages. 
+ 3.1.2 Menu Page 
+ ●   FR-5:  Display the menu segmented into the following  categories with specific  items and prices: 
+ o   Starters: 
+ ▪   Bruschetta – Fresh tomatoes, basil, olive oil, and toasted baguette  slices:  $8.50 
+ ▪   Caesar Salad – Crisp romaine with homemade Caesar dressing: 
+ $9.00 
+ o   Main Courses: 
+ ▪   Grilled Salmon – Served with lemon butter sauce and seasonal  vegetables:  $22.00 
+ ▪   Ribeye Steak – 12 oz prime cut with garlic mashed potatoes: 
+ $28.00 
+ ▪   Vegetable Risotto – Creamy Arborio rice with wild mushrooms: 
+ $18.00 
+ o   Desserts: 
+ ▪   Tiramisu – Classic Italian dessert with mascarpone:  $7.50 
+ ▪   Cheesecake – Creamy cheesecake with berry compote:  $7.00 
+ o   Beverages: 
+ ▪   Red Wine (Glass) – A selection of Italian reds:  $10.00 
+ ▪   White Wine (Glass) – Crisp and refreshing:  $9.00 
