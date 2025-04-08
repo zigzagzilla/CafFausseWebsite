@@ -44,7 +44,7 @@ const About = () => {
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                src="https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
                 alt="Chef Antonio Rossi" 
                 className="w-full h-full object-cover" 
               />
