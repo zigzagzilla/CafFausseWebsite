@@ -44,7 +44,7 @@ const About = () => {
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
                 alt="Chef Antonio Rossi" 
                 className="w-full h-full object-cover" 
               />
@@ -74,7 +74,7 @@ const About = () => {
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1595273670150-bd0c3c392c46?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                src="https://images.unsplash.com/photo-1583900985737-6d0495555783?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
                 alt="James Williams" 
                 className="w-full h-full object-cover" 
               />
