@@ -121,6 +121,18 @@ export const menuItems = [
         name: "White Wine (Glass)",
         description: "Crisp and refreshing",
         price: 9.00
+      },
+      {
+        id: 10,
+        name: "Craft Beer",
+        description: "Local artisan brews",
+        price: 6.00
+      },
+      {
+        id: 11,
+        name: "Espresso",
+        description: "Strong and aromatic",
+        price: 3.00
       }
     ]
   }
