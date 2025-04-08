@@ -200,48 +200,49 @@ const Gallery = () => {
         />
         
         {/* Awards Section */}
-        <div className="mt-20 bg-white py-10 rounded-sm shadow-md">
+        <div className="mt-20">
           <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">Awards</h3>
           <div className="w-16 h-0.5 bg-[#B49A5B] mx-auto mb-12"></div>
           
-          <div className="max-w-2xl mx-auto px-6">
-            <ul className="space-y-6">
-              <li className="flex items-start">
-                <div className="text-[#B49A5B] mr-3 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-sm shadow-md">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F5F2EA]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#B49A5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Culinary Excellence Award – 2022</h4>
-                  <p className="text-[#333333] mt-2">Recognized for our outstanding culinary creativity and execution.</p>
-                </div>
-              </li>
-              
-              <li className="flex items-start">
-                <div className="text-[#B49A5B] mr-3 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              </div>
+              <h4 className="font-serif text-xl font-semibold text-[#8A2633] text-center mb-3">Culinary Excellence Award</h4>
+              <p className="text-[#333333] text-center mb-2">2022</p>
+              <p className="text-[#333333] text-center">Recognized for our outstanding culinary creativity and execution.</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-sm shadow-md">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F5F2EA]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#B49A5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Restaurant of the Year – 2023</h4>
-                  <p className="text-[#333333] mt-2">Voted the premier dining establishment in the region.</p>
-                </div>
-              </li>
-              
-              <li className="flex items-start">
-                <div className="text-[#B49A5B] mr-3 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              </div>
+              <h4 className="font-serif text-xl font-semibold text-[#8A2633] text-center mb-3">Restaurant of the Year</h4>
+              <p className="text-[#333333] text-center mb-2">2023</p>
+              <p className="text-[#333333] text-center">Voted the premier dining establishment in the region.</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-sm shadow-md">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F5F2EA]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#B49A5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Best Fine Dining Experience – Foodie Magazine, 2023</h4>
-                  <p className="text-[#333333] mt-2">Acclaimed for our exceptional service, atmosphere and culinary delights.</p>
-                </div>
-              </li>
-            </ul>
+              </div>
+              <h4 className="font-serif text-xl font-semibold text-[#8A2633] text-center mb-3">Best Fine Dining Experience</h4>
+              <p className="text-[#333333] text-center mb-2">Foodie Magazine, 2023</p>
+              <p className="text-[#333333] text-center">Acclaimed for our exceptional service, atmosphere and culinary delights.</p>
+            </div>
           </div>
         </div>
         
