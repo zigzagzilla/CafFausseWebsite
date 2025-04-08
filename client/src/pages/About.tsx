@@ -17,7 +17,7 @@ const About = () => {
             <div className="w-16 h-0.5 bg-[#B49A5B] mb-8"></div>
             <div className="space-y-4 text-[#333333]">
               <p>
-                Founded in 2015 by Chef Marie Laurent, Café Fausse began as a small bistro with a vision to blend traditional French culinary techniques with contemporary American influences.
+                Founded in 2010 by Chef Antonio‬ Rossi and‬ restaurateur Maria Lopez, Café Fausse blends traditional Italian flavors‬ with modern culinary innovation. Our mission is to provide an‬ unforgettable dining experience that reflects both quality and creativity.‬
               </p>
               <p>
                 The name "Fausse," meaning "false" in French, reflects our playful approach to cuisine—dishes that appear simple but reveal complex flavors and unexpected elements upon tasting.
