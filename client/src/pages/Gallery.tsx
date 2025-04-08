@@ -20,7 +20,7 @@ const galleryItems = [
     category: "food",
     image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     title: "Artful Dessert",
-    description: "Decadent tiramisu with coffee dusting"
+    description: "Decadent tiramisu or cheesecake"
   },
   {
     id: 3,
