@@ -40,19 +40,34 @@ const About = () => {
         <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">Meet Our Team</h3>
         <div className="w-16 h-0.5 bg-[#B49A5B] mx-auto mb-12"></div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
-                alt="Chef Marie Laurent" 
+                alt="Chef Antonio Rossi" 
                 className="w-full h-full object-cover" 
               />
             </div>
-            <h4 className="font-serif text-xl font-semibold text-[#8A2633] mb-2">Chef Marie Laurent</h4>
-            <p className="text-[#B49A5B] font-medium mb-4">Executive Chef & Founder</p>
+            <h4 className="font-serif text-xl font-semibold text-[#8A2633] mb-2">Chef Antonio Rossi</h4>
+            <p className="text-[#B49A5B] font-medium mb-4">Executive Chef & Co-Founder</p>
             <p className="text-[#333333]">
-              With training from the Culinary Institute of Paris and experience in Michelin-starred restaurants, Marie brings creative vision and technical excellence to Café Fausse.
+              With training from prestigious Italian culinary schools and experience in Michelin-starred restaurants, Antonio brings authentic Italian flavors and modern techniques to Café Fausse.
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                alt="Maria Lopez" 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+            <h4 className="font-serif text-xl font-semibold text-[#8A2633] mb-2">Maria Lopez</h4>
+            <p className="text-[#B49A5B] font-medium mb-4">Restaurateur & Co-Founder</p>
+            <p className="text-[#333333]">
+              With a keen eye for hospitality excellence and business acumen, Maria creates the perfect atmosphere and ensures every guest experiences the unique charm of Café Fausse.
             </p>
           </div>
           
