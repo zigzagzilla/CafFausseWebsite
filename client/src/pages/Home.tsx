@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import NewsletterForm from "@/components/NewsletterForm";
+import heroImage from "@assets/home-cafe-fausse.webp";
 
 const Home = () => {
   return (
@@ -7,8 +8,8 @@ const Home = () => {
       {/* Hero Section */}
       <div className="relative h-[70vh] bg-[#333333] overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80" 
-          alt="Fine dining ambiance" 
+          src={heroImage} 
+          alt="Luxurious dining room with ornate ceiling and chandeliers" 
           className="absolute inset-0 w-full h-full object-cover opacity-70"
         />
         <div className="absolute inset-0 flex items-center justify-center text-center px-4">
