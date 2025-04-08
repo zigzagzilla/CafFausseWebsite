@@ -246,6 +246,42 @@ const Gallery = () => {
           </div>
         </div>
         
+        {/* Reviews Section */}
+        <div className="mt-20">
+          <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">Reviews</h3>
+          <div className="w-16 h-0.5 bg-[#B49A5B] mx-auto mb-12"></div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-white p-6 rounded-sm shadow-md">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F5F2EA]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#B49A5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-[#333333] text-center italic mb-4 text-lg">
+                "Exceptional ambiance and unforgettable flavors."
+              </p>
+              <p className="text-[#8A2633] font-semibold text-center">– Gourmet Review</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-sm shadow-md">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F5F2EA]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#B49A5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-[#333333] text-center italic mb-4 text-lg">
+                "A must-visit restaurant for food enthusiasts."
+              </p>
+              <p className="text-[#8A2633] font-semibold text-center">– The Daily Bite</p>
+            </div>
+          </div>
+        </div>
+        
         {/* Testimonials */}
         <div className="mt-20">
           <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">What Our Guests Say</h3>
