@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Lightbox } from "@/components/ui/lightbox";
 import ribeyeSteak from "@assets/gallery-ribeye-steak.webp";
 import cafeInterior from "@assets/gallery-cafe-interior.webp";
 import specialEvent from "@assets/gallery-special-event.webp";
@@ -12,6 +13,7 @@ const galleryItems = [
     id: 1,
     category: "food",
     image: ribeyeSteak,
+    imageHigh: ribeyeSteak, // Using the same high-quality imported image
     title: "Signature Dish",
     description: "Chef's special ribeye steak"
   },
@@ -19,6 +21,7 @@ const galleryItems = [
     id: 2,
     category: "food",
     image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    imageHigh: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=800&q=90",
     title: "Artful Dessert",
     description: "Decadent tiramisu or cheesecake"
   },
@@ -26,6 +29,7 @@ const galleryItems = [
     id: 3,
     category: "ambiance",
     image: cafeInterior,
+    imageHigh: cafeInterior, // Using the same high-quality imported image
     title: "Dining Room",
     description: "Elegant atmosphere for your meal"
   },
@@ -33,6 +37,7 @@ const galleryItems = [
     id: 4,
     category: "ambiance",
     image: "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    imageHigh: "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=800&q=90",
     title: "Fine Wines",
     description: "Extensive selection of premium wines"
   },
@@ -40,6 +45,7 @@ const galleryItems = [
     id: 5,
     category: "events",
     image: specialEvent,
+    imageHigh: specialEvent, // Using the same high-quality imported image
     title: "Events",
     description: "Perfect setting for elegant gatherings"
   },
@@ -47,6 +53,7 @@ const galleryItems = [
     id: 6,
     category: "events",
     image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    imageHigh: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=800&q=90",
     title: "Chef's Table",
     description: "Exclusive culinary experience"
   }
@@ -73,6 +80,20 @@ const testimonials = [
 
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState<GalleryCategory>("all");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({
+    src: "",
+    alt: ""
+  });
+
+  const openLightbox = (imageSrc: string, imageAlt: string) => {
+    setSelectedImage({ src: imageSrc, alt: imageAlt });
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
 
   const filteredGalleryItems = activeCategory === "all" 
     ? galleryItems 
@@ -141,7 +162,18 @@ const Gallery = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGalleryItems.map(item => (
             <div key={item.id} className="gallery-item">
-              <div className="relative overflow-hidden rounded-sm shadow-md group cursor-pointer">
+              <div 
+                className="relative overflow-hidden rounded-sm shadow-md group cursor-pointer"
+                onClick={() => openLightbox(item.imageHigh || item.image, item.title)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View larger image of ${item.title}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    openLightbox(item.imageHigh || item.image, item.title);
+                  }
+                }}
+              >
                 <img 
                   src={item.image}
                   alt={item.title} 
@@ -151,12 +183,21 @@ const Gallery = () => {
                   <div className="text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <h4 className="font-serif text-xl font-semibold mb-2">{item.title}</h4>
                     <p>{item.description}</p>
+                    <span className="mt-2 inline-block px-4 py-1 border border-white rounded-sm text-sm">Click to enlarge</span>
                   </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+        
+        {/* Lightbox */}
+        <Lightbox 
+          isOpen={lightboxOpen}
+          onClose={closeLightbox}
+          imageSrc={selectedImage.src}
+          imageAlt={selectedImage.alt}
+        />
         
         {/* Testimonials */}
         <div className="mt-20">
