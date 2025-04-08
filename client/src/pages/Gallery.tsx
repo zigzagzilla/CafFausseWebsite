@@ -199,6 +199,52 @@ const Gallery = () => {
           imageAlt={selectedImage.alt}
         />
         
+        {/* Awards Section */}
+        <div className="mt-20 bg-white py-10 rounded-sm shadow-md">
+          <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">Awards</h3>
+          <div className="w-16 h-0.5 bg-[#B49A5B] mx-auto mb-12"></div>
+          
+          <div className="max-w-2xl mx-auto px-6">
+            <ul className="space-y-6">
+              <li className="flex items-start">
+                <div className="text-[#B49A5B] mr-3 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Culinary Excellence Award – 2022</h4>
+                  <p className="text-[#333333] mt-2">Recognized for our outstanding culinary creativity and execution.</p>
+                </div>
+              </li>
+              
+              <li className="flex items-start">
+                <div className="text-[#B49A5B] mr-3 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Restaurant of the Year – 2023</h4>
+                  <p className="text-[#333333] mt-2">Voted the premier dining establishment in the region.</p>
+                </div>
+              </li>
+              
+              <li className="flex items-start">
+                <div className="text-[#B49A5B] mr-3 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-serif text-xl font-semibold text-[#8A2633]">Best Fine Dining Experience – Foodie Magazine, 2023</h4>
+                  <p className="text-[#333333] mt-2">Acclaimed for our exceptional service, atmosphere and culinary delights.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
         {/* Testimonials */}
         <div className="mt-20">
           <h3 className="font-serif text-3xl font-semibold text-[#8A2633] mb-6 text-center">What Our Guests Say</h3>
