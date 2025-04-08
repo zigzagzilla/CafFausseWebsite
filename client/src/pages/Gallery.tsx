@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import ribeyeSteak from "@assets/gallery-ribeye-steak.webp";
+import cafeInterior from "@assets/gallery-cafe-interior.webp";
 
 type GalleryCategory = "all" | "food" | "ambiance" | "events";
 
@@ -8,37 +10,37 @@ const galleryItems = [
   {
     id: 1,
     category: "food",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    image: ribeyeSteak,
     title: "Signature Dish",
-    description: "Chef's special creation"
+    description: "Chef's special ribeye steak"
   },
   {
     id: 2,
     category: "food",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    image: "https://images.unsplash.com/photo-1551529227-e8a5cf40c7ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     title: "Artful Dessert",
-    description: "Sweet masterpiece by our pastry chef"
+    description: "Decadent tiramisu and cheesecake"
   },
   {
     id: 3,
     category: "ambiance",
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    image: cafeInterior,
     title: "Dining Room",
     description: "Elegant atmosphere for your meal"
   },
   {
     id: 4,
     category: "ambiance",
-    image: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
-    title: "Wine Bar",
-    description: "Extensive selection of fine wines"
+    image: "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+    title: "Fine Wines",
+    description: "Extensive selection of premium wines"
   },
   {
     id: 5,
     category: "events",
-    image: "https://images.unsplash.com/photo-1470753937643-efeb931202a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
-    title: "Private Dining",
-    description: "Perfect for special celebrations"
+    image: cafeInterior,
+    title: "Dining Room",
+    description: "Perfect setting for elegant gatherings"
   },
   {
     id: 6,
