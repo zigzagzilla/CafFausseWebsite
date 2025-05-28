@@ -11,6 +11,7 @@ import Menu from "@/pages/Menu";
 import Reservations from "@/pages/Reservations";
 import About from "@/pages/About";
 import Gallery from "@/pages/Gallery";
+import Admin from "@/pages/Admin";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/reservations" component={Reservations} />
       <Route path="/about" component={About} />
       <Route path="/gallery" component={Gallery} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
