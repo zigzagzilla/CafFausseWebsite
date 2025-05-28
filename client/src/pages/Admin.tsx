@@ -10,12 +10,82 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
 
 const Admin = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // Simple authentication (in a real app, this would be more secure)
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    
+    // Simple password check (replace with your preferred admin password)
+    if (password === "admin123") {
+      setIsAuthenticated(true);
+      toast({
+        title: "Success",
+        description: "Welcome to the admin dashboard",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Invalid password",
+        variant: "destructive",
+      });
+    }
+    setIsLoggingIn(false);
+  };
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPassword("");
+  };
+  
+  // If not authenticated, show login form
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EA] flex items-center justify-center py-8">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-[#8A2633]">
+              <Lock className="h-5 w-5" />
+              Admin Access
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full bg-[#8A2633] hover:bg-[#722127]"
+              >
+                {isLoggingIn ? "Logging in..." : "Login"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   // State for new reservation form
   const [newReservation, setNewReservation] = useState<InsertReservation>({
@@ -128,11 +198,20 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-[#F5F2EA] py-8">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl font-semibold text-[#8A2633] mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-[#333333]">Manage restaurant reservations</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="font-serif text-4xl font-semibold text-[#8A2633] mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-[#333333]">Manage restaurant reservations</p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="border-[#8A2633] text-[#8A2633] hover:bg-[#8A2633] hover:text-white"
+          >
+            Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="view" className="w-full">
