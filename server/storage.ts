@@ -19,6 +19,7 @@ export interface IStorage {
   getReservations(): Promise<Reservation[]>;
   getReservation(id: number): Promise<Reservation | undefined>;
   createReservation(reservation: InsertReservation): Promise<Reservation>;
+  deleteReservation(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -92,10 +93,15 @@ export class MemStorage implements IStorage {
     const reservation: Reservation = { 
       ...insertReservation, 
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      specialRequests: insertReservation.specialRequests ?? null
     };
     this.reservations.set(id, reservation);
     return reservation;
+  }
+
+  async deleteReservation(id: number): Promise<boolean> {
+    return this.reservations.delete(id);
   }
 }
 

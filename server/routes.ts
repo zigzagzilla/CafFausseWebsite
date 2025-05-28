@@ -80,6 +80,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete reservation (cancel)
+  app.delete(`${apiPrefix}/reservations/:id`, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid reservation ID" });
+      }
+
+      const success = await storage.deleteReservation(id);
+      if (success) {
+        res.json({ message: "Reservation cancelled successfully" });
+      } else {
+        res.status(404).json({ message: "Reservation not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "An error occurred while cancelling the reservation" });
+    }
+  });
+
   // Get single reservation (would be protected in a real app)
   app.get(`${apiPrefix}/reservations/:id`, async (req: Request, res: Response) => {
     try {
