@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Hash } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
 
 const Admin = () => {
@@ -22,22 +22,37 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  // Simple authentication (in a real app, this would be more secure)
-  const handleLogin = (e: React.FormEvent) => {
+  // Authentication using API
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
     
-    // Simple password check (replace with your preferred admin password)
-    if (password === "admin123") {
-      setIsAuthenticated(true);
-      toast({
-        title: "Success",
-        description: "Welcome to the admin dashboard",
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
       });
-    } else {
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsAuthenticated(true);
+        toast({
+          title: "Success",
+          description: "Welcome to the admin dashboard",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Invalid password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid password",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -247,7 +262,7 @@ const Admin = () => {
                             <h3 className="font-semibold text-lg text-[#8A2633]">
                               {reservation.name}
                             </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm text-[#666666]">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-2 text-sm text-[#666666]">
                               <div className="flex items-center gap-1">
                                 <CalendarDays className="h-4 w-4" />
                                 {formatDate(reservation.date)}
@@ -259,6 +274,10 @@ const Admin = () => {
                               <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
                                 {reservation.guests} guest{reservation.guests !== 1 ? 's' : ''}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Hash className="h-4 w-4" />
+                                Table {(reservation as any).tableNumber || 'N/A'}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Mail className="h-4 w-4" />

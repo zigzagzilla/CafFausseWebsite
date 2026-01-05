@@ -38,6 +38,7 @@ class Reservation(db.Model):
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Text, nullable=False)
     guests = db.Column(db.Integer, nullable=False)
+    table_number = db.Column(db.Integer, nullable=False)
     special_requests = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -50,6 +51,7 @@ class Reservation(db.Model):
             'date': self.date.isoformat() if self.date else None,
             'time': self.time,
             'guests': self.guests,
+            'tableNumber': self.table_number,
             'specialRequests': self.special_requests,
             'createdAt': self.created_at.isoformat() if self.created_at else None
         }

@@ -1,4 +1,5 @@
 import os
+import random
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 
@@ -6,7 +7,8 @@ from .menu_data import menu_items
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
-ADMIN_PASSWORD = "admin123"
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+TOTAL_TABLES = 30
 
 def is_db_connected():
     return current_app.config.get('DB_CONNECTED', False)
@@ -73,6 +75,39 @@ def get_reservations():
     except Exception as e:
         return jsonify({'message': 'An error occurred while fetching reservations'}), 500
 
+@api.route('/reservations/availability', methods=['GET'])
+def check_availability():
+    try:
+        date_str = request.args.get('date')
+        time = request.args.get('time')
+        
+        if not date_str or not time:
+            return jsonify({'message': 'Date and time are required'}), 400
+        
+        try:
+            reservation_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'message': 'Invalid date format'}), 400
+        
+        if is_db_connected():
+            from .database import db
+            from .models import Reservation
+            booked_count = db.session.query(Reservation).filter_by(
+                date=reservation_date, time=time
+            ).count()
+            available_tables = TOTAL_TABLES - booked_count
+        else:
+            from .storage import storage
+            available_tables = len(storage.get_available_tables_for_time_slot(reservation_date, time))
+        
+        return jsonify({
+            'available': available_tables > 0,
+            'availableTables': available_tables,
+            'totalTables': TOTAL_TABLES
+        })
+    except Exception as e:
+        return jsonify({'message': 'An error occurred while checking availability'}), 500
+
 @api.route('/reservations', methods=['POST'])
 def create_reservation():
     try:
@@ -88,39 +123,72 @@ def create_reservation():
         except ValueError:
             return jsonify({'message': 'Invalid date format'}), 400
         
+        time = data['time']
+        
         if is_db_connected():
             from .database import db
             from .models import Reservation
+            
+            booked_tables = db.session.query(Reservation.table_number).filter_by(
+                date=reservation_date, time=time
+            ).all()
+            booked_table_numbers = {t[0] for t in booked_tables}
+            
+            all_tables = set(range(1, TOTAL_TABLES + 1))
+            available_tables = list(all_tables - booked_table_numbers)
+            
+            if not available_tables:
+                return jsonify({
+                    'message': 'Sorry, this time slot is fully booked. Please select a different time.',
+                    'error': 'TIME_SLOT_FULL'
+                }), 409
+            
+            table_number = random.choice(available_tables)
+            
             reservation = Reservation(
                 name=data['name'],
                 email=data['email'],
                 phone=data['phone'],
                 date=reservation_date,
-                time=data['time'],
+                time=time,
                 guests=int(data['guests']),
+                table_number=table_number,
                 special_requests=data.get('specialRequests')
             )
             db.session.add(reservation)
             db.session.commit()
             
             return jsonify({
-                'message': 'Reservation successful',
+                'message': f'Reservation successful! You have been assigned Table {table_number}.',
                 'reservation': reservation.to_dict()
             }), 201
         else:
             from .storage import storage
+            
+            if not storage.is_time_slot_available(reservation_date, time):
+                return jsonify({
+                    'message': 'Sorry, this time slot is fully booked. Please select a different time.',
+                    'error': 'TIME_SLOT_FULL'
+                }), 409
+            
             reservation = storage.create_reservation(
                 name=data['name'],
                 email=data['email'],
                 phone=data['phone'],
                 reservation_date=reservation_date,
-                time=data['time'],
+                time=time,
                 guests=int(data['guests']),
                 special_requests=data.get('specialRequests')
             )
             
+            if reservation is None:
+                return jsonify({
+                    'message': 'Sorry, this time slot is fully booked. Please select a different time.',
+                    'error': 'TIME_SLOT_FULL'
+                }), 409
+            
             return jsonify({
-                'message': 'Reservation successful',
+                'message': f'Reservation successful! You have been assigned Table {reservation.table_number}.',
                 'reservation': reservation.to_dict()
             }), 201
         

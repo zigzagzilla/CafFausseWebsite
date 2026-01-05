@@ -34,6 +34,7 @@ export const reservations = pgTable("reservations", {
   date: date("date").notNull(),
   time: text("time").notNull(),
   guests: integer("guests").notNull(),
+  tableNumber: integer("table_number").notNull(),
   specialRequests: text("special_requests"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

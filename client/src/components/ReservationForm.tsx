@@ -35,6 +35,7 @@ type FormValues = z.infer<typeof formSchema>;
 const ReservationForm = () => {
   const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [assignedTable, setAssignedTable] = useState<number | null>(null);
   
   // Create the form
   const form = useForm<FormValues>({
@@ -56,18 +57,21 @@ const ReservationForm = () => {
       const response = await apiRequest("POST", "/api/reservations", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       setShowSuccess(true);
+      setAssignedTable(data.reservation?.tableNumber || null);
       toast({
         title: "Reservation Successful",
-        description: "We've received your reservation request. A confirmation will be sent to your email.",
+        description: data.message || "We've received your reservation request.",
       });
       form.reset();
     },
     onError: (error: any) => {
+      const errorMessage = error.message || "There was an error with your reservation. Please try again.";
+      const isFullyBooked = errorMessage.includes("fully booked");
       toast({
-        title: "Reservation Failed",
-        description: error.message || "There was an error with your reservation. Please try again.",
+        title: isFullyBooked ? "Time Slot Unavailable" : "Reservation Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -76,6 +80,7 @@ const ReservationForm = () => {
   // Handle form submission
   const onSubmit = (data: FormValues) => {
     setShowSuccess(false);
+    setAssignedTable(null);
     reservationMutation.mutate(data);
   };
 
@@ -248,7 +253,11 @@ const ReservationForm = () => {
             {/* Success Message */}
             {showSuccess && (
               <div className="mt-6 p-4 bg-green-100 text-green-800 rounded-sm text-center">
-                Thank you for your reservation! We've sent a confirmation email with details. We look forward to serving you.
+                <p className="font-semibold mb-2">Thank you for your reservation!</p>
+                {assignedTable && (
+                  <p className="text-lg font-bold">You have been assigned Table {assignedTable}</p>
+                )}
+                <p className="mt-2">We've sent a confirmation email with details. We look forward to serving you.</p>
               </div>
             )}
           </form>
