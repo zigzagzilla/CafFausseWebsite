@@ -1,11 +1,15 @@
-from flask import Blueprint, request, jsonify
+import os
+from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
-from .storage import storage
+
 from .menu_data import menu_items
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
 ADMIN_PASSWORD = "admin123"
+
+def is_db_connected():
+    return current_app.config.get('DB_CONNECTED', False)
 
 @api.route('/menu', methods=['GET'])
 def get_menu():
@@ -21,25 +25,51 @@ def subscribe_newsletter():
         
         email = data['email']
         
-        existing = storage.get_newsletter_subscriber_by_email(email)
-        if existing:
-            return jsonify({'message': 'Email already subscribed'}), 409
-        
-        subscriber = storage.create_newsletter_subscriber(email)
-        
-        return jsonify({
-            'message': 'Subscription successful',
-            'subscriber': subscriber.to_dict()
-        }), 201
+        if is_db_connected():
+            from .database import db
+            from .models import NewsletterSubscriber
+            existing = db.session.query(NewsletterSubscriber).filter_by(email=email).first()
+            if existing:
+                return jsonify({'message': 'Email already subscribed'}), 409
+            
+            subscriber = NewsletterSubscriber(email=email)
+            db.session.add(subscriber)
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Subscription successful',
+                'subscriber': subscriber.to_dict()
+            }), 201
+        else:
+            from .storage import storage
+            existing = storage.get_newsletter_subscriber_by_email(email)
+            if existing:
+                return jsonify({'message': 'Email already subscribed'}), 409
+            
+            subscriber = storage.create_newsletter_subscriber(email)
+            return jsonify({
+                'message': 'Subscription successful',
+                'subscriber': subscriber.to_dict()
+            }), 201
         
     except Exception as e:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
         return jsonify({'message': 'An error occurred while processing your request'}), 500
 
 @api.route('/reservations', methods=['GET'])
 def get_reservations():
     try:
-        reservations = storage.get_reservations()
-        return jsonify([r.to_dict() for r in reservations])
+        if is_db_connected():
+            from .database import db
+            from .models import Reservation
+            reservations = db.session.query(Reservation).order_by(Reservation.created_at.desc()).all()
+            return jsonify([r.to_dict() for r in reservations])
+        else:
+            from .storage import storage
+            reservations = storage.get_reservations()
+            return jsonify([r.to_dict() for r in reservations])
     except Exception as e:
         return jsonify({'message': 'An error occurred while fetching reservations'}), 500
 
@@ -58,43 +88,92 @@ def create_reservation():
         except ValueError:
             return jsonify({'message': 'Invalid date format'}), 400
         
-        reservation = storage.create_reservation(
-            name=data['name'],
-            email=data['email'],
-            phone=data['phone'],
-            reservation_date=reservation_date,
-            time=data['time'],
-            guests=int(data['guests']),
-            special_requests=data.get('specialRequests')
-        )
-        
-        return jsonify({
-            'message': 'Reservation successful',
-            'reservation': reservation.to_dict()
-        }), 201
+        if is_db_connected():
+            from .database import db
+            from .models import Reservation
+            reservation = Reservation(
+                name=data['name'],
+                email=data['email'],
+                phone=data['phone'],
+                date=reservation_date,
+                time=data['time'],
+                guests=int(data['guests']),
+                special_requests=data.get('specialRequests')
+            )
+            db.session.add(reservation)
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Reservation successful',
+                'reservation': reservation.to_dict()
+            }), 201
+        else:
+            from .storage import storage
+            reservation = storage.create_reservation(
+                name=data['name'],
+                email=data['email'],
+                phone=data['phone'],
+                reservation_date=reservation_date,
+                time=data['time'],
+                guests=int(data['guests']),
+                special_requests=data.get('specialRequests')
+            )
+            
+            return jsonify({
+                'message': 'Reservation successful',
+                'reservation': reservation.to_dict()
+            }), 201
         
     except Exception as e:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
         return jsonify({'message': 'An error occurred while processing your request'}), 500
 
 @api.route('/reservations/<int:id>', methods=['GET'])
 def get_reservation(id):
     try:
-        reservation = storage.get_reservation(id)
-        if not reservation:
-            return jsonify({'message': 'Reservation not found'}), 404
-        return jsonify(reservation.to_dict())
+        if is_db_connected():
+            from .database import db
+            from .models import Reservation
+            reservation = db.session.query(Reservation).get(id)
+            if not reservation:
+                return jsonify({'message': 'Reservation not found'}), 404
+            return jsonify(reservation.to_dict())
+        else:
+            from .storage import storage
+            reservation = storage.get_reservation(id)
+            if not reservation:
+                return jsonify({'message': 'Reservation not found'}), 404
+            return jsonify(reservation.to_dict())
     except Exception as e:
         return jsonify({'message': 'An error occurred while fetching the reservation'}), 500
 
 @api.route('/reservations/<int:id>', methods=['DELETE'])
 def delete_reservation(id):
     try:
-        success = storage.delete_reservation(id)
-        if not success:
-            return jsonify({'message': 'Reservation not found'}), 404
-        
-        return jsonify({'message': 'Reservation cancelled successfully'})
+        if is_db_connected():
+            from .database import db
+            from .models import Reservation
+            reservation = db.session.query(Reservation).get(id)
+            if not reservation:
+                return jsonify({'message': 'Reservation not found'}), 404
+            
+            db.session.delete(reservation)
+            db.session.commit()
+            
+            return jsonify({'message': 'Reservation cancelled successfully'})
+        else:
+            from .storage import storage
+            success = storage.delete_reservation(id)
+            if not success:
+                return jsonify({'message': 'Reservation not found'}), 404
+            
+            return jsonify({'message': 'Reservation cancelled successfully'})
     except Exception as e:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
         return jsonify({'message': 'An error occurred while cancelling the reservation'}), 500
 
 @api.route('/admin/login', methods=['POST'])

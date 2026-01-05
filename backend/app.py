@@ -10,6 +10,37 @@ def create_app():
     
     CORS(app)
     
+    database_url = os.environ.get('DATABASE_URL')
+    db_connected = False
+    
+    if database_url:
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+        }
+        
+        try:
+            from .database import db
+            db.init_app(app)
+            
+            with app.app_context():
+                from . import models
+                db.create_all()
+            
+            db_connected = True
+            print("Database connected successfully!")
+        except Exception as e:
+            print(f"Database connection failed: {e}")
+            print("Falling back to in-memory storage...")
+            app.config.pop('SQLALCHEMY_DATABASE_URI', None)
+    
+    app.config['DB_CONNECTED'] = db_connected
+    
     from .routes import api
     app.register_blueprint(api)
     
