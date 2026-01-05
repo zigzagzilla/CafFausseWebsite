@@ -2,8 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
-from .models import db
-from .routes import api
+from .database import db
 
 load_dotenv()
 
@@ -12,11 +11,22 @@ def create_app():
     
     CORS(app)
     
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
+    pghost = os.environ.get('PGHOST')
+    pguser = os.environ.get('PGUSER')
+    pgpassword = os.environ.get('PGPASSWORD')
+    pgdatabase = os.environ.get('PGDATABASE')
+    pgport = os.environ.get('PGPORT', '5432')
+    
+    if pghost and pguser and pgpassword and pgdatabase:
+        from urllib.parse import quote_plus
+        database_url = f"postgresql://{pguser}:{quote_plus(pgpassword)}@{pghost}:{pgport}/{pgdatabase}?sslmode=require"
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
-        raise ValueError("DATABASE_URL environment variable is required")
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        else:
+            raise ValueError("Database connection variables are required")
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -26,10 +36,12 @@ def create_app():
     
     db.init_app(app)
     
+    from .routes import api
+    from . import models
+    app.register_blueprint(api)
+    
     with app.app_context():
         db.create_all()
-    
-    app.register_blueprint(api)
     
     @app.route('/')
     def serve_frontend():

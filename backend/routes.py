@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from .models import db, Reservation, NewsletterSubscriber
+from .database import db
+from .models import Reservation, NewsletterSubscriber
 from .menu_data import menu_items
 
 api = Blueprint('api', __name__, url_prefix='/api')
