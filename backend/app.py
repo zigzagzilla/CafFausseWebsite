@@ -8,7 +8,7 @@ from .routes import api
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__, static_folder='../client/dist', static_url_path='')
+    app = Flask(__name__, static_folder='../dist/public', static_url_path='')
     
     CORS(app)
     
