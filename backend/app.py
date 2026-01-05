@@ -5,8 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_FOLDER = os.path.join(BASE_DIR, 'dist', 'public')
+
 def create_app():
-    app = Flask(__name__, static_folder='../dist/public', static_url_path='')
+    app = Flask(__name__, static_folder=None)
     
     CORS(app)
     
@@ -44,15 +47,17 @@ def create_app():
     from .routes import api
     app.register_blueprint(api)
     
-    @app.route('/')
-    def serve_frontend():
-        return send_from_directory(app.static_folder, 'index.html')
-    
+    @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
-    def serve_static(path):
-        if os.path.exists(os.path.join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, 'index.html')
+    def serve(path):
+        if path and path.startswith('api'):
+            return app.send_static_file('index.html')
+        
+        full_path = os.path.join(STATIC_FOLDER, path)
+        if path and os.path.exists(full_path) and os.path.isfile(full_path):
+            return send_from_directory(STATIC_FOLDER, path)
+        
+        return send_from_directory(STATIC_FOLDER, 'index.html')
     
     return app
 

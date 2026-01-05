@@ -1,4 +1,5 @@
 import jamesWilliamsImage from '../assets/james-williams.png';
+import sophiaChenImage from '@assets/generated_images/asian_woman_pastry_chef_portrait.png';
 
 const About = () => {
   return (
@@ -91,7 +92,7 @@ const About = () => {
           <div className="text-center">
             <div className="mb-6 mx-auto w-48 h-48 rounded-full overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80" 
+                src={sophiaChenImage}
                 alt="Sophia Chen" 
                 className="w-full h-full object-cover" 
               />
