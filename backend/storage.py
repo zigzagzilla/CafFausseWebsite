@@ -1,134 +1,174 @@
+from __future__ import annotations
+
 import random
-from datetime import datetime, date
-from typing import Dict, List, Optional, Set
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List, Optional
 
 TOTAL_TABLES = 30
 
+
+@dataclass
+class Customer:
+    customer_id: int
+    customer_name: str
+    email_address: str
+    phone_number: Optional[str]
+    newsletter_signup: bool
+    created_at: datetime
+
+    def to_dict(self):
+        return {
+            "customerId": self.customer_id,
+            "customerName": self.customer_name,
+            "emailAddress": self.email_address,
+            "phoneNumber": self.phone_number,
+            "newsletterSignup": self.newsletter_signup,
+            "createdAt": self.created_at.isoformat(),
+        }
+
+
+@dataclass
 class Reservation:
-    def __init__(self, id: int, name: str, email: str, phone: str, 
-                 reservation_date: date, time: str, guests: int,
-                 table_number: int,
-                 special_requests: Optional[str] = None):
-        self.id = id
-        self.name = name
-        self.email = email
-        self.phone = phone
-        self.date = reservation_date
-        self.time = time
-        self.guests = guests
-        self.table_number = table_number
-        self.special_requests = special_requests
-        self.created_at = datetime.utcnow()
+    reservation_id: int
+    customer_id: int
+    name: str
+    email: str
+    phone: Optional[str]
+    time_slot: datetime
+    table_number: int
+    guests: int
+    special_requests: Optional[str]
+    created_at: datetime
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'email': self.email,
-            'phone': self.phone,
-            'date': self.date.isoformat() if self.date else None,
-            'time': self.time,
-            'guests': self.guests,
-            'tableNumber': self.table_number,
-            'specialRequests': self.special_requests,
-            'createdAt': self.created_at.isoformat() if self.created_at else None
+            "id": self.reservation_id,
+            "reservationId": self.reservation_id,
+            "customerId": self.customer_id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "timeSlot": self.time_slot.isoformat(),
+            "tableNumber": self.table_number,
+            "guests": self.guests,
+            "specialRequests": self.special_requests,
+            "createdAt": self.created_at.isoformat(),
         }
 
-class NewsletterSubscriber:
-    def __init__(self, id: int, email: str):
-        self.id = id
-        self.email = email
-        self.created_at = datetime.utcnow()
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'email': self.email,
-            'createdAt': self.created_at.isoformat() if self.created_at else None
-        }
 
 class MemStorage:
     def __init__(self):
+        self.customers: Dict[int, Customer] = {}
         self.reservations: Dict[int, Reservation] = {}
-        self.newsletter_subscribers: Dict[int, NewsletterSubscriber] = {}
+        self.customer_id_counter = 1
         self.reservation_id_counter = 1
-        self.subscriber_id_counter = 1
 
+    # Customers
+    def get_customer_by_email(self, email: str) -> Optional[Customer]:
+        email_l = email.strip().lower()
+        for c in self.customers.values():
+            if c.email_address.lower() == email_l:
+                return c
+        return None
+
+    def create_or_update_customer(
+        self,
+        customer_name: str,
+        email_address: str,
+        phone_number: Optional[str] = None,
+        newsletter_signup: Optional[bool] = None,
+    ) -> Customer:
+        existing = self.get_customer_by_email(email_address)
+        if existing:
+            existing.customer_name = customer_name or existing.customer_name
+            if phone_number is not None:
+                existing.phone_number = phone_number
+            if newsletter_signup is not None:
+                existing.newsletter_signup = newsletter_signup
+            return existing
+
+        c = Customer(
+            customer_id=self.customer_id_counter,
+            customer_name=customer_name,
+            email_address=email_address,
+            phone_number=phone_number,
+            newsletter_signup=bool(newsletter_signup) if newsletter_signup is not None else False,
+            created_at=datetime.utcnow(),
+        )
+        self.customers[self.customer_id_counter] = c
+        self.customer_id_counter += 1
+        return c
+
+    # Newsletter
+    def subscribe_newsletter(self, email_address: str) -> Customer:
+        # If we don't know the name yet, keep blank
+        c = self.get_customer_by_email(email_address)
+        if c:
+            c.newsletter_signup = True
+            return c
+        return self.create_or_update_customer(
+            customer_name="",
+            email_address=email_address,
+            phone_number=None,
+            newsletter_signup=True,
+        )
+
+    # Reservations
     def get_reservations(self) -> List[Reservation]:
         return list(self.reservations.values())
 
-    def get_reservation(self, id: int) -> Optional[Reservation]:
-        return self.reservations.get(id)
+    def get_reservation(self, reservation_id: int) -> Optional[Reservation]:
+        return self.reservations.get(reservation_id)
 
-    def get_reservations_for_time_slot(self, reservation_date: date, time: str) -> List[Reservation]:
-        return [
-            r for r in self.reservations.values()
-            if r.date == reservation_date and r.time == time
-        ]
-
-    def get_booked_tables_for_time_slot(self, reservation_date: date, time: str) -> Set[int]:
-        reservations = self.get_reservations_for_time_slot(reservation_date, time)
-        return {r.table_number for r in reservations}
-
-    def get_available_tables_for_time_slot(self, reservation_date: date, time: str) -> List[int]:
-        booked_tables = self.get_booked_tables_for_time_slot(reservation_date, time)
-        all_tables = set(range(1, TOTAL_TABLES + 1))
-        return list(all_tables - booked_tables)
-
-    def is_time_slot_available(self, reservation_date: date, time: str) -> bool:
-        available_tables = self.get_available_tables_for_time_slot(reservation_date, time)
-        return len(available_tables) > 0
-
-    def get_random_available_table(self, reservation_date: date, time: str) -> Optional[int]:
-        available_tables = self.get_available_tables_for_time_slot(reservation_date, time)
-        if not available_tables:
-            return None
-        return random.choice(available_tables)
-
-    def create_reservation(self, name: str, email: str, phone: str, 
-                          reservation_date: date, time: str, guests: int,
-                          special_requests: Optional[str] = None) -> Optional[Reservation]:
-        table_number = self.get_random_available_table(reservation_date, time)
-        if table_number is None:
-            return None
-        
-        reservation = Reservation(
-            id=self.reservation_id_counter,
-            name=name,
-            email=email,
-            phone=phone,
-            reservation_date=reservation_date,
-            time=time,
-            guests=guests,
-            table_number=table_number,
-            special_requests=special_requests
-        )
-        self.reservations[self.reservation_id_counter] = reservation
-        self.reservation_id_counter += 1
-        return reservation
-
-    def delete_reservation(self, id: int) -> bool:
-        if id in self.reservations:
-            del self.reservations[id]
+    def delete_reservation(self, reservation_id: int) -> bool:
+        if reservation_id in self.reservations:
+            del self.reservations[reservation_id]
             return True
         return False
 
-    def get_newsletter_subscribers(self) -> List[NewsletterSubscriber]:
-        return list(self.newsletter_subscribers.values())
+    def create_reservation(
+        self,
+        customer_name: str,
+        email_address: str,
+        phone_number: Optional[str],
+        time_slot: datetime,
+        guests: int,
+        special_requests: Optional[str] = None,
+    ) -> Reservation:
+        # Capacity check: max 30 tables per time slot
+        taken_tables = {
+            r.table_number
+            for r in self.reservations.values()
+            if r.time_slot == time_slot
+        }
+        if len(taken_tables) >= TOTAL_TABLES:
+            raise ValueError("This time slot is fully booked")
 
-    def get_newsletter_subscriber_by_email(self, email: str) -> Optional[NewsletterSubscriber]:
-        for subscriber in self.newsletter_subscribers.values():
-            if subscriber.email == email:
-                return subscriber
-        return None
+        available = [t for t in range(1, TOTAL_TABLES + 1) if t not in taken_tables]
+        table_number = random.choice(available)
 
-    def create_newsletter_subscriber(self, email: str) -> NewsletterSubscriber:
-        subscriber = NewsletterSubscriber(
-            id=self.subscriber_id_counter,
-            email=email
+        customer = self.create_or_update_customer(
+            customer_name=customer_name,
+            email_address=email_address,
+            phone_number=phone_number,
         )
-        self.newsletter_subscribers[self.subscriber_id_counter] = subscriber
-        self.subscriber_id_counter += 1
-        return subscriber
+
+        r = Reservation(
+            reservation_id=self.reservation_id_counter,
+            customer_id=customer.customer_id,
+            name=customer_name,
+            email=email_address,
+            phone=phone_number,
+            time_slot=time_slot,
+            table_number=table_number,
+            guests=guests,
+            special_requests=special_requests,
+            created_at=datetime.utcnow(),
+        )
+        self.reservations[self.reservation_id_counter] = r
+        self.reservation_id_counter += 1
+        return r
+
 
 storage = MemStorage()

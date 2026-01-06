@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -14,39 +14,37 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-// Newsletter Subscriber schema
-export const newsletterSubscribers = pgTable("newsletter_subscribers", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
+// Customers schema (SRS-aligned)
+export const customers = pgTable("customers", {
+  customerId: serial("customer_id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  emailAddress: text("email_address").notNull().unique(),
+  phoneNumber: text("phone_number"),
+  newsletterSignup: boolean("newsletter_signup").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertNewsletterSubscriberSchema = createInsertSchema(newsletterSubscribers).pick({
-  email: true,
-});
-
-// Reservation schema
+// Reservations schema (SRS-aligned, normalized)
 export const reservations = pgTable("reservations", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone").notNull(),
-  date: date("date").notNull(),
-  time: text("time").notNull(),
-  guests: integer("guests").notNull(),
+  reservationId: serial("reservation_id").primaryKey(),
+  customerId: integer("customer_id").notNull(),
+  timeSlot: timestamp("time_slot").notNull(),
   tableNumber: integer("table_number").notNull(),
+
+  // Extra fields used by the UI (not required by SRS)
+  guests: integer("guests").default(2).notNull(),
   specialRequests: text("special_requests"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertReservationSchema = createInsertSchema(reservations).pick({
-  name: true,
-  email: true,
-  phone: true,
-  date: true,
-  time: true,
-  guests: true,
-  specialRequests: true,
+// API payload schemas (not 1:1 with DB columns, because reservations are normalized)
+export const insertReservationSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  time_slot: z.string().min(10), // ISO datetime
+  guests: z.number().int().min(1).max(20).optional(),
+  specialRequests: z.string().optional(),
 });
 
 // Menu Item schema (for reference, not for storage as it's static)
@@ -143,10 +141,21 @@ export const menuItems = [
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
-export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
-export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscriberSchema>;
+export type Customer = typeof customers.$inferSelect;
 
-export type Reservation = typeof reservations.$inferSelect;
+// Reservation response type (includes customer fields for UI convenience)
+export type Reservation = {
+  reservationId: number;
+  customerId: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  timeSlot: string;
+  tableNumber: number;
+  guests: number;
+  specialRequests?: string | null;
+  createdAt?: string | null;
+};
 export type InsertReservation = z.infer<typeof insertReservationSchema>;
 
 export type MenuItem = {

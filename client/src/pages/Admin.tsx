@@ -10,8 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Hash } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
+
+function timeLabelTo24Hour(timeLabel: string): string {
+  const m = timeLabel.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return "19:00";
+  let hour = parseInt(m[1], 10);
+  const minute = m[2];
+  const period = m[3].toUpperCase();
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+  return `${hour.toString().padStart(2, "0")}:${minute}`;
+}
+
+type NewReservationFormState = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+  specialRequests: string;
+};
 
 const Admin = () => {
   const { toast } = useToast();
@@ -22,37 +43,22 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  // Authentication using API
-  const handleLogin = async (e: React.FormEvent) => {
+  // Simple authentication (in a real app, this would be more secure)
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
     
-    try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+    // Simple password check (replace with your preferred admin password)
+    if (password === "admin123") {
+      setIsAuthenticated(true);
+      toast({
+        title: "Success",
+        description: "Welcome to the admin dashboard",
       });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setIsAuthenticated(true);
-        toast({
-          title: "Success",
-          description: "Welcome to the admin dashboard",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Invalid password",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    } else {
       toast({
         title: "Error",
-        description: "An error occurred. Please try again.",
+        description: "Invalid password",
         variant: "destructive",
       });
     }
@@ -103,7 +109,7 @@ const Admin = () => {
   }
   
   // State for new reservation form
-  const [newReservation, setNewReservation] = useState<InsertReservation>({
+  const [newReservation, setNewReservation] = useState<NewReservationFormState>({
     name: "",
     email: "",
     phone: "",
@@ -187,7 +193,18 @@ const Admin = () => {
 
   const handleCreateReservation = (e: React.FormEvent) => {
     e.preventDefault();
-    createReservationMutation.mutate(newReservation);
+    const hhmm = timeLabelTo24Hour(newReservation.time);
+    const time_slot = `${newReservation.date}T${hhmm}:00`;
+    const payload: InsertReservation = {
+      name: newReservation.name,
+      email: newReservation.email,
+      phone: newReservation.phone?.trim() || undefined,
+      time_slot,
+      guests: newReservation.guests,
+      specialRequests: newReservation.specialRequests || undefined,
+    };
+
+    createReservationMutation.mutate(payload);
   };
 
   const handleCancelReservation = (id: number, customerName: string) => {
@@ -196,7 +213,7 @@ const Admin = () => {
     }
   };
 
-  const handleInputChange = (field: keyof InsertReservation, value: string | number) => {
+  const handleInputChange = (field: keyof NewReservationFormState, value: string | number) => {
     setNewReservation(prev => ({
       ...prev,
       [field]: value
@@ -205,8 +222,8 @@ const Admin = () => {
 
   // Sort reservations by date and time
   const sortedReservations = [...reservations].sort((a, b) => {
-    const dateA = new Date(`${a.date} ${a.time}`);
-    const dateB = new Date(`${b.date} ${b.time}`);
+    const dateA = new Date(a.timeSlot);
+    const dateB = new Date(b.timeSlot);
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -254,7 +271,7 @@ const Admin = () => {
                   <div className="space-y-4">
                     {sortedReservations.map((reservation) => (
                       <div
-                        key={reservation.id}
+                        key={reservation.reservationId}
                         className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
                       >
                         <div className="flex justify-between items-start mb-3">
@@ -262,31 +279,34 @@ const Admin = () => {
                             <h3 className="font-semibold text-lg text-[#8A2633]">
                               {reservation.name}
                             </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-2 text-sm text-[#666666]">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm text-[#666666]">
                               <div className="flex items-center gap-1">
                                 <CalendarDays className="h-4 w-4" />
-                                {formatDate(reservation.date)}
+                                {formatDate(reservation.timeSlot)}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
-                                {reservation.time}
+                                {new Date(reservation.timeSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
                                 {reservation.guests} guest{reservation.guests !== 1 ? 's' : ''}
                               </div>
                               <div className="flex items-center gap-1">
-                                <Hash className="h-4 w-4" />
-                                Table {(reservation as any).tableNumber || 'N/A'}
-                              </div>
-                              <div className="flex items-center gap-1">
                                 <Mail className="h-4 w-4" />
                                 {reservation.email}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 mt-1 text-sm text-[#666666]">
-                              <Phone className="h-4 w-4" />
-                              {reservation.phone}
+                            <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-[#666666]">
+                              {reservation.phone && (
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-4 w-4" />
+                                  {reservation.phone}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Badge variant="outline">Table {reservation.tableNumber}</Badge>
+                              </div>
                             </div>
                             {reservation.specialRequests && (
                               <div className="mt-2">
@@ -300,7 +320,7 @@ const Admin = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleCancelReservation(reservation.id, reservation.name)}
+                            onClick={() => handleCancelReservation(reservation.reservationId, reservation.name || "(unknown)")}
                             disabled={cancelReservationMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />

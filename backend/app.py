@@ -20,11 +20,6 @@ def create_app():
         if database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
         
-        if '?' not in database_url:
-            database_url += '?sslmode=require'
-        elif 'sslmode' not in database_url:
-            database_url += '&sslmode=require'
-        
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -38,6 +33,9 @@ def create_app():
             
             with app.app_context():
                 from . import models
+                # For local demos / grading, you can reset tables by setting RESET_DB=1
+                if os.environ.get("RESET_DB") == "1":
+                    db.drop_all()
                 db.create_all()
             
             db_connected = True

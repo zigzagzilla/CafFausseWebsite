@@ -21,7 +21,21 @@ const timeSlots = generateTimeSlots();
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
+  // Phone is optional per SRS. If provided, require 10+ digits.
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (val === undefined) return true;
+        const trimmed = val.trim();
+        if (trimmed.length === 0) return true;
+        // allow basic US formats; main goal is to avoid obviously invalid short inputs
+        const digits = trimmed.replace(/\D/g, "");
+        return digits.length >= 10;
+      },
+      { message: "Please enter a valid phone number" }
+    ),
   date: z.string().refine(val => !isNaN(Date.parse(val)), {
     message: "Please select a valid date",
   }),
@@ -32,10 +46,22 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+function timeLabelTo24Hour(timeLabel: string): string {
+  // Expects format like "5:00 PM" or "11:30 AM"
+  const m = timeLabel.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return "19:00";
+  let hour = parseInt(m[1], 10);
+  const minute = m[2];
+  const period = m[3].toUpperCase();
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+  const hh = hour.toString().padStart(2, "0");
+  return `${hh}:${minute}`;
+}
+
 const ReservationForm = () => {
   const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
-  const [assignedTable, setAssignedTable] = useState<number | null>(null);
   
   // Create the form
   const form = useForm<FormValues>({
@@ -54,24 +80,32 @@ const ReservationForm = () => {
   // Set up the reservation submission mutation
   const reservationMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const response = await apiRequest("POST", "/api/reservations", data);
+      const hhmm = timeLabelTo24Hour(data.time);
+      const timeSlot = `${data.date}T${hhmm}:00`;
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: (data.phone || "").trim(),
+        time_slot: timeSlot,
+        guests: data.guests,
+        specialRequests: data.specialRequests,
+      };
+
+      const response = await apiRequest("POST", "/api/reservations", payload);
       return response.json();
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       setShowSuccess(true);
-      setAssignedTable(data.reservation?.tableNumber || null);
       toast({
         title: "Reservation Successful",
-        description: data.message || "We've received your reservation request.",
+        description: "We've received your reservation request. A confirmation will be sent to your email.",
       });
       form.reset();
     },
     onError: (error: any) => {
-      const errorMessage = error.message || "There was an error with your reservation. Please try again.";
-      const isFullyBooked = errorMessage.includes("fully booked");
       toast({
-        title: isFullyBooked ? "Time Slot Unavailable" : "Reservation Failed",
-        description: errorMessage,
+        title: "Reservation Failed",
+        description: error.message || "There was an error with your reservation. Please try again.",
         variant: "destructive",
       });
     },
@@ -80,7 +114,6 @@ const ReservationForm = () => {
   // Handle form submission
   const onSubmit = (data: FormValues) => {
     setShowSuccess(false);
-    setAssignedTable(null);
     reservationMutation.mutate(data);
   };
 
@@ -253,11 +286,7 @@ const ReservationForm = () => {
             {/* Success Message */}
             {showSuccess && (
               <div className="mt-6 p-4 bg-green-100 text-green-800 rounded-sm text-center">
-                <p className="font-semibold mb-2">Thank you for your reservation!</p>
-                {assignedTable && (
-                  <p className="text-lg font-bold">You have been assigned Table {assignedTable}</p>
-                )}
-                <p className="mt-2">We've sent a confirmation email with details. We look forward to serving you.</p>
+                Thank you for your reservation! We've sent a confirmation email with details. We look forward to serving you.
               </div>
             )}
           </form>
