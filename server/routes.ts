@@ -48,11 +48,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const reservationData = insertReservationSchema.parse(req.body);
       
-      // Parse the date string to ensure it's valid
-      if (reservationData.date) {
-        const dateObj = new Date(reservationData.date);
+      // Parse the time_slot string to ensure it's valid
+      if (reservationData.time_slot) {
+        const dateObj = new Date(reservationData.time_slot);
         if (isNaN(dateObj.getTime())) {
-          return res.status(400).json({ message: "Invalid date format" });
+          return res.status(400).json({ message: "Invalid time_slot format" });
         }
       }
 

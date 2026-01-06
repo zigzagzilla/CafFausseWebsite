@@ -37,6 +37,11 @@ export const reservations = pgTable("reservations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Newsletter subscriber schema (for API validation)
+export const insertNewsletterSubscriberSchema = z.object({
+  email: z.string().email(),
+});
+
 // API payload schemas (not 1:1 with DB columns, because reservations are normalized)
 export const insertReservationSchema = z.object({
   name: z.string().min(2),
@@ -142,6 +147,9 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Customer = typeof customers.$inferSelect;
+
+export type NewsletterSubscriber = { id: number; email: string; createdAt: string };
+export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscriberSchema>;
 
 // Reservation response type (includes customer fields for UI convenience)
 export type Reservation = {
