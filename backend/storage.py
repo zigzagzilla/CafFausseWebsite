@@ -40,8 +40,13 @@ class Reservation:
     guests: int
     special_requests: Optional[str]
     created_at: datetime
+    additional_tables: Optional[List[int]] = None
 
     def to_dict(self):
+        if self.additional_tables:
+            table_display = ", ".join(str(t) for t in [self.table_number] + self.additional_tables)
+        else:
+            table_display = self.table_number
         return {
             "id": self.reservation_id,
             "reservationId": self.reservation_id,
@@ -50,7 +55,7 @@ class Reservation:
             "email": self.email,
             "phone": self.phone,
             "timeSlot": self.time_slot.isoformat(),
-            "tableNumber": self.table_number,
+            "tableNumber": table_display,
             "guests": self.guests,
             "specialRequests": self.special_requests,
             "createdAt": self.created_at.isoformat(),
@@ -127,6 +132,39 @@ class MemStorage:
             return True
         return False
 
+    def check_duplicate_reservation(
+        self,
+        email_address: str,
+        phone_number: Optional[str],
+        time_slot: datetime,
+    ) -> Optional[Reservation]:
+        """Check if there's an existing reservation within 2 hours for same email or phone."""
+        from datetime import timedelta
+        DUPLICATE_WINDOW_HOURS = 2
+        
+        time_window_start = time_slot - timedelta(hours=DUPLICATE_WINDOW_HOURS)
+        time_window_end = time_slot + timedelta(hours=DUPLICATE_WINDOW_HOURS)
+        
+        email_l = email_address.strip().lower()
+        phone_normalized = phone_number.strip() if phone_number else None
+        
+        for r in self.reservations.values():
+            if time_window_start <= r.time_slot <= time_window_end:
+                if r.email.lower() == email_l:
+                    return r
+                if phone_normalized and r.phone and r.phone == phone_normalized:
+                    return r
+        
+        return None
+
+    def _find_sequential_tables(self, available: List[int], count: int = 2) -> Optional[List[int]]:
+        """Find sequential available table numbers."""
+        available_set = set(available)
+        for t in sorted(available):
+            if all((t + i) in available_set for i in range(count)):
+                return [t + i for i in range(count)]
+        return None
+
     def create_reservation(
         self,
         customer_name: str,
@@ -136,17 +174,26 @@ class MemStorage:
         guests: int,
         special_requests: Optional[str] = None,
     ) -> Reservation:
-        # Capacity check: max 30 tables per time slot
-        taken_tables = {
-            r.table_number
-            for r in self.reservations.values()
-            if r.time_slot == time_slot
-        }
-        if len(taken_tables) >= TOTAL_TABLES:
+        tables_needed = 2 if guests > 4 else 1
+        
+        taken_tables = set()
+        for r in self.reservations.values():
+            if r.time_slot == time_slot:
+                taken_tables.add(r.table_number)
+                if r.additional_tables:
+                    taken_tables.update(r.additional_tables)
+        
+        available = [t for t in range(1, TOTAL_TABLES + 1) if t not in taken_tables]
+        
+        if len(available) < tables_needed:
             raise ValueError("This time slot is fully booked")
 
-        available = [t for t in range(1, TOTAL_TABLES + 1) if t not in taken_tables]
-        table_number = random.choice(available)
+        if tables_needed == 2:
+            assigned_tables = self._find_sequential_tables(available, 2)
+            if not assigned_tables:
+                raise ValueError("No sequential tables available for your party size. Please call the restaurant for assistance.")
+        else:
+            assigned_tables = [random.choice(available)]
 
         customer = self.create_or_update_customer(
             customer_name=customer_name,
@@ -154,6 +201,8 @@ class MemStorage:
             phone_number=phone_number,
         )
 
+        additional = assigned_tables[1:] if len(assigned_tables) > 1 else None
+        
         r = Reservation(
             reservation_id=self.reservation_id_counter,
             customer_id=customer.customer_id,
@@ -161,13 +210,15 @@ class MemStorage:
             email=email_address,
             phone=phone_number,
             time_slot=time_slot,
-            table_number=table_number,
+            table_number=assigned_tables[0],
             guests=guests,
             special_requests=special_requests,
             created_at=datetime.utcnow(),
+            additional_tables=additional,
         )
         self.reservations[self.reservation_id_counter] = r
         self.reservation_id_counter += 1
+        
         return r
 
 

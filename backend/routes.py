@@ -1,9 +1,9 @@
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, request, jsonify, current_app
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_
 from sqlalchemy.exc import IntegrityError
 
 from .menu_data import menu_items
@@ -12,6 +12,8 @@ api = Blueprint('api', __name__, url_prefix='/api')
 
 ADMIN_PASSWORD = "admin123"
 TOTAL_TABLES = 30
+RESTAURANT_PHONE = "202-555-4567"
+DUPLICATE_WINDOW_HOURS = 2
 
 
 def is_db_connected():
@@ -110,6 +112,54 @@ def _parse_legacy_date_time(date_str: str, time_label: str) -> datetime:
     return datetime.combine(d, t)
 
 
+def _check_duplicate_reservation(db, email, phone, time_slot):
+    """Check for existing reservation within 2 hours for same email or phone."""
+    from .models import Customer, Reservation
+    
+    time_window_start = time_slot - timedelta(hours=DUPLICATE_WINDOW_HOURS)
+    time_window_end = time_slot + timedelta(hours=DUPLICATE_WINDOW_HOURS)
+    
+    conditions = []
+    
+    customer_by_email = db.session.execute(
+        select(Customer).where(Customer.email_address == email)
+    ).scalar_one_or_none()
+    
+    if customer_by_email:
+        conditions.append(Reservation.customer_id == customer_by_email.customer_id)
+    
+    if phone:
+        customers_by_phone = db.session.execute(
+            select(Customer).where(Customer.phone_number == phone)
+        ).scalars().all()
+        for c in customers_by_phone:
+            conditions.append(Reservation.customer_id == c.customer_id)
+    
+    if not conditions:
+        return None
+    
+    existing = db.session.execute(
+        select(Reservation).where(
+            and_(
+                Reservation.time_slot >= time_window_start,
+                Reservation.time_slot <= time_window_end,
+                or_(*conditions)
+            )
+        ).limit(1)
+    ).scalar_one_or_none()
+    
+    return existing
+
+
+def _find_sequential_tables(available_tables, count=2):
+    """Find sequential available table numbers."""
+    available_set = set(available_tables)
+    for t in sorted(available_tables):
+        if all((t + i) in available_set for i in range(count)):
+            return [t + i for i in range(count)]
+    return None
+
+
 @api.route('/reservations', methods=['POST'])
 def create_reservation():
     """Create a reservation with table assignment.
@@ -119,6 +169,8 @@ def create_reservation():
     - max 30 tables per time slot
     - assign a random available table (1..30)
     - phone is optional
+    - parties > 4 get 2 sequential tables
+    - duplicate detection: no reservation within 2 hours for same email/phone
     """
     try:
         data = request.get_json() or {}
@@ -134,7 +186,6 @@ def create_reservation():
             return jsonify({'message': 'name is required'}), 400
         if not email:
             return jsonify({'message': 'email is required'}), 400
-        # Backward compatible: accept either a single time_slot OR legacy date+time
         if time_slot_raw:
             try:
                 time_slot = _parse_time_slot(time_slot_raw)
@@ -150,11 +201,20 @@ def create_reservation():
             except ValueError as e:
                 return jsonify({'message': str(e)}), 400
 
+        tables_needed = 2 if guests > 4 else 1
+
         if is_db_connected():
             from .database import db
             from .models import Customer, Reservation
 
-            # Upsert customer by email
+            existing_reservation = _check_duplicate_reservation(db, email, phone, time_slot)
+            if existing_reservation:
+                existing_time = existing_reservation.time_slot.strftime('%B %d, %Y at %I:%M %p')
+                return jsonify({
+                    'message': f'You already have a reservation on {existing_time}. '
+                               f'To make changes, please call the restaurant at {RESTAURANT_PHONE}.'
+                }), 409
+
             customer = db.session.execute(
                 select(Customer).where(Customer.email_address == email)
             ).scalar_one_or_none()
@@ -171,23 +231,38 @@ def create_reservation():
                     newsletter_signup=False,
                 )
                 db.session.add(customer)
-                db.session.flush()  # assigns customer_id
+                db.session.flush()
 
-            # Find which tables are already booked for that slot
-            taken_tables = db.session.execute(
+            primary_tables = db.session.execute(
                 select(Reservation.table_number).where(Reservation.time_slot == time_slot)
             ).scalars().all()
+            additional_tables = db.session.execute(
+                select(Reservation.additional_table).where(
+                    and_(Reservation.time_slot == time_slot, Reservation.additional_table.isnot(None))
+                )
+            ).scalars().all()
+            taken_tables = set(primary_tables) | set(additional_tables)
 
-            if len(taken_tables) >= TOTAL_TABLES:
+            available = [t for t in range(1, TOTAL_TABLES + 1) if t not in taken_tables]
+
+            if len(available) < tables_needed:
                 return jsonify({'message': 'This time slot is fully booked. Please pick another time.'}), 409
 
-            available = [t for t in range(1, TOTAL_TABLES + 1) if t not in set(taken_tables)]
-            table_number = random.choice(available)
+            if tables_needed == 2:
+                assigned_tables = _find_sequential_tables(available, 2)
+                if not assigned_tables:
+                    return jsonify({
+                        'message': 'No sequential tables available for your party size. '
+                                   f'Please call the restaurant at {RESTAURANT_PHONE} for assistance.'
+                    }), 409
+            else:
+                assigned_tables = [random.choice(available)]
 
             reservation = Reservation(
                 customer_id=customer.customer_id,
                 time_slot=time_slot,
-                table_number=table_number,
+                table_number=assigned_tables[0],
+                additional_table=assigned_tables[1] if len(assigned_tables) > 1 else None,
                 guests=guests,
                 special_requests=special_requests,
             )
@@ -199,11 +274,23 @@ def create_reservation():
                 db.session.rollback()
                 return jsonify({'message': 'Please retry; availability just changed.'}), 409
 
-            return jsonify({'message': 'Reservation successful', 'reservation': reservation.to_dict()}), 201
+            table_display = ", ".join(str(t) for t in assigned_tables)
+            result = reservation.to_dict()
+            result['tableNumber'] = table_display
+            
+            return jsonify({'message': 'Reservation successful', 'reservation': result}), 201
 
         else:
             from .storage import storage
             try:
+                existing = storage.check_duplicate_reservation(email, phone, time_slot)
+                if existing:
+                    existing_time = existing.time_slot.strftime('%B %d, %Y at %I:%M %p')
+                    return jsonify({
+                        'message': f'You already have a reservation on {existing_time}. '
+                                   f'To make changes, please call the restaurant at {RESTAURANT_PHONE}.'
+                    }), 409
+
                 reservation = storage.create_reservation(
                     customer_name=name,
                     email_address=email,
@@ -217,7 +304,7 @@ def create_reservation():
 
             return jsonify({'message': 'Reservation successful', 'reservation': reservation.to_dict()}), 201
 
-    except Exception:
+    except Exception as e:
         if is_db_connected():
             from .database import db
             db.session.rollback()

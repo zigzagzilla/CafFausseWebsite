@@ -47,6 +47,7 @@ class Reservation(db.Model):
     customer = db.relationship("Customer", backref=db.backref("reservations", lazy=True))
     time_slot = db.Column(db.DateTime, nullable=False)
     table_number = db.Column(db.Integer, nullable=False)
+    additional_table = db.Column(db.Integer, nullable=True)
 
     # Extra (not in SRS but supports the UI)
     guests = db.Column(db.Integer, nullable=False, default=2)
@@ -64,7 +65,11 @@ class Reservation(db.Model):
         email_address = self.customer.email_address if self.customer else None
         phone_number = self.customer.phone_number if self.customer else None
 
-        # Include customer fields for UI convenience while keeping DB normalized.
+        if self.additional_table:
+            table_display = f"{self.table_number}, {self.additional_table}"
+        else:
+            table_display = self.table_number
+
         return {
             "id": self.reservation_id,
             "reservationId": self.reservation_id,
@@ -73,7 +78,7 @@ class Reservation(db.Model):
             "email": email_address,
             "phone": phone_number,
             "timeSlot": self.time_slot.isoformat() if self.time_slot else None,
-            "tableNumber": self.table_number,
+            "tableNumber": table_display,
             "guests": self.guests,
             "specialRequests": self.special_requests,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
