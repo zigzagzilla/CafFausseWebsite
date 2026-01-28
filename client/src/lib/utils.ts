@@ -9,8 +9,11 @@ export function formatPrice(price: number): string {
   return price.toFixed(2);
 }
 
-export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('en-US', {
+export function formatDate(date: string | null | undefined): string {
+  if (!date) return 'No date';
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return 'Invalid Date';
+  return parsed.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

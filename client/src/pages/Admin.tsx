@@ -184,9 +184,9 @@ const Admin = () => {
 
   // Sort reservations by date and time
   const sortedReservations = [...reservations].sort((a, b) => {
-    const dateA = new Date(a.timeSlot);
-    const dateB = new Date(b.timeSlot);
-    return dateA.getTime() - dateB.getTime();
+    const dateA = a.timeSlot ? new Date(a.timeSlot).getTime() : 0;
+    const dateB = b.timeSlot ? new Date(b.timeSlot).getTime() : 0;
+    return dateA - dateB;
   });
   
   // If not authenticated, show login form
@@ -287,7 +287,7 @@ const Admin = () => {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
-                                {new Date(reservation.timeSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                {reservation.timeSlot ? new Date(reservation.timeSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'No time'}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
