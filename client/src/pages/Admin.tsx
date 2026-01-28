@@ -95,6 +95,9 @@ const Admin = () => {
 
   // State for editing subscriber
   const [editingSubscriber, setEditingSubscriber] = useState<EditingSubscriber>(null);
+  
+  // State for adding new subscriber
+  const [newSubscriberEmail, setNewSubscriberEmail] = useState("");
 
   // Update subscriber mutation
   const updateSubscriberMutation = useMutation({
@@ -121,6 +124,37 @@ const Admin = () => {
     onError: (error: Error) => {
       toast({
         title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Add subscriber mutation
+  const addSubscriberMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to add subscriber");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/newsletter/subscribers"] });
+      setNewSubscriberEmail("");
+      toast({
+        title: "Subscriber added",
+        description: "The new subscriber has been added successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add subscriber",
         description: error.message,
         variant: "destructive",
       });
@@ -525,6 +559,42 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="newsletter">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Add New Subscriber
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newSubscriberEmail.trim()) {
+                      addSubscriberMutation.mutate(newSubscriberEmail.trim());
+                    }
+                  }}
+                  className="flex gap-3"
+                >
+                  <Input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={newSubscriberEmail}
+                    onChange={(e) => setNewSubscriberEmail(e.target.value)}
+                    required
+                    className="flex-1"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={addSubscriberMutation.isPending}
+                    className="bg-[#8A2633] hover:bg-[#722127]"
+                  >
+                    {addSubscriberMutation.isPending ? "Adding..." : "Add Subscriber"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
