@@ -53,7 +53,7 @@ Update: Encountered and fixed an issue with React component hooks (useState, use
 Update: Encountered and fixed issues converting AM/PM to 24HR time and vice versa per html.
 Update: Added a feature that assigned 4 persons per table, thus a reservation for 5-8 people will occupy 2 of the 30 available tables.
 
-4. Using the Application
+Using the Application
 	•	Navigate through the site using the top navigation bar.
 	•	Create a reservation via the Reservations page.
 	•	Sign up for the newsletter using the email form.
