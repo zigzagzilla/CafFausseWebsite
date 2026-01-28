@@ -65,7 +65,7 @@ AI-assisted development tools were used to support this project in accordance wi
 	•	Replit.com was used as a development environment and for rapid prototyping (“vibe coding”), enabling quick iteration on UI components and backend scaffolding.
 	•	ChatGPT was used as a development assistant for:
 	•	Analyzing the Software Requirements Specification
-  • Generating imagery suitable to the topic
+ 	• 	Generating imagery suitable to the topic
 	•	Reasoning about backend logic and data models
 	•	Debugging issues and refining implementation details
 
@@ -74,3 +74,4 @@ All code was reviewed, adapted, and integrated by the author, and the final appl
 Notes
 	•	This project is intended as a development/demo application and is not hardened for production use.
 	•	Database tables are created automatically on application startup for convenience.
+	•	AI insisted on using node.js express rather than flask initially, and required significant rewrite cycles to ensure flask was used in both development and production environments--since it was in one and not the other, 				constant persistence errors surfaced.
