@@ -14,14 +14,26 @@ import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "luc
 import type { Reservation, InsertReservation } from "@shared/schema";
 
 function timeLabelTo24Hour(timeLabel: string): string {
-  const m = timeLabel.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!m) return "19:00";
-  let hour = parseInt(m[1], 10);
-  const minute = m[2];
-  const period = m[3].toUpperCase();
-  if (period === "PM" && hour !== 12) hour += 12;
-  if (period === "AM" && hour === 12) hour = 0;
-  return `${hour.toString().padStart(2, "0")}:${minute}`;
+  const trimmed = timeLabel.trim();
+  
+  // If already in 24-hour format (HH:MM), return as-is
+  const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    return `${match24[1].padStart(2, "0")}:${match24[2]}`;
+  }
+  
+  // Try 12-hour format (e.g., "5:00 PM")
+  const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const minute = match12[2];
+    const period = match12[3].toUpperCase();
+    if (period === "PM" && hour !== 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+    return `${hour.toString().padStart(2, "0")}:${minute}`;
+  }
+  
+  return "19:00"; // fallback
 }
 
 type NewReservationFormState = {
