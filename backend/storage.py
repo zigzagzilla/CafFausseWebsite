@@ -138,12 +138,12 @@ class MemStorage:
         phone_number: Optional[str],
         time_slot: datetime,
     ) -> Optional[Reservation]:
-        """Check if there's an existing reservation within 2 hours for same email or phone."""
+        """Check if there's an existing reservation within 1 hour 59 minutes for same email or phone."""
         from datetime import timedelta
-        DUPLICATE_WINDOW_HOURS = 2
+        DUPLICATE_WINDOW_MINUTES = 119  # 1 hour 59 minutes
         
-        time_window_start = time_slot - timedelta(hours=DUPLICATE_WINDOW_HOURS)
-        time_window_end = time_slot + timedelta(hours=DUPLICATE_WINDOW_HOURS)
+        time_window_start = time_slot - timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
+        time_window_end = time_slot + timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
         
         email_l = email_address.strip().lower()
         phone_normalized = phone_number.strip() if phone_number else None

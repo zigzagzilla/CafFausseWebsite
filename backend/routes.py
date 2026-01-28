@@ -13,7 +13,7 @@ api = Blueprint('api', __name__, url_prefix='/api')
 ADMIN_PASSWORD = "admin123"
 TOTAL_TABLES = 30
 RESTAURANT_PHONE = "202-555-4567"
-DUPLICATE_WINDOW_HOURS = 2
+DUPLICATE_WINDOW_MINUTES = 119  # 1 hour 59 minutes
 
 
 def is_db_connected():
@@ -113,11 +113,11 @@ def _parse_legacy_date_time(date_str: str, time_label: str) -> datetime:
 
 
 def _check_duplicate_reservation(db, email, phone, time_slot):
-    """Check for existing reservation within 2 hours for same email or phone."""
+    """Check for existing reservation within 1 hour 59 minutes for same email or phone."""
     from .models import Customer, Reservation
     
-    time_window_start = time_slot - timedelta(hours=DUPLICATE_WINDOW_HOURS)
-    time_window_end = time_slot + timedelta(hours=DUPLICATE_WINDOW_HOURS)
+    time_window_start = time_slot - timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
+    time_window_end = time_slot + timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
     
     conditions = []
     
