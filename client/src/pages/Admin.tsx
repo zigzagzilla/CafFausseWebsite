@@ -9,7 +9,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/utils";
+import { formatDate, generateTimeSlots } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+
+// Generate time slots for the form
+const timeSlots = generateTimeSlots();
 import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
 
@@ -419,16 +423,29 @@ const Admin = () => {
                       />
                     </div>
                     
-                    <div>
-                      <Label htmlFor="time">Time</Label>
-                      <Input
-                        id="time"
-                        type="time"
-                        value={newReservation.time}
-                        onChange={(e) => handleInputChange("time", e.target.value)}
-                        required
-                      />
+                  </div>
+                  
+                  <div>
+                    <Label className="block mb-2">Time</Label>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {timeSlots.map((time) => (
+                        <Button
+                          key={time}
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "text-center py-2 border border-gray-300 rounded-sm hover:bg-[#8A2633] hover:text-white focus:outline-none",
+                            newReservation.time === time ? "bg-[#8A2633] text-white" : ""
+                          )}
+                          onClick={() => handleInputChange("time", time)}
+                        >
+                          {time}
+                        </Button>
+                      ))}
                     </div>
+                    {!newReservation.time && (
+                      <p className="text-sm text-muted-foreground mt-1">Please select a time slot</p>
+                    )}
                   </div>
                   
                   <div>
