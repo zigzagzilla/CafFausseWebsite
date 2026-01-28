@@ -56,6 +56,58 @@ def get_newsletter_subscribers():
         return jsonify({'message': 'Failed to fetch subscribers'}), 500
 
 
+@api.route('/newsletter/subscribers/<int:subscriber_id>', methods=['PATCH'])
+def update_newsletter_subscriber(subscriber_id):
+    """Update a newsletter subscriber's information."""
+    try:
+        data = request.get_json() or {}
+        email = data.get('email', '').strip().lower() if data.get('email') else None
+        name = data.get('name', '').strip() if data.get('name') is not None else None
+        
+        if is_db_connected():
+            from .database import db
+            from .models import Customer
+            
+            customer = db.session.get(Customer, subscriber_id)
+            if not customer:
+                return jsonify({'message': 'Subscriber not found'}), 404
+            
+            if email:
+                customer.email_address = email
+            if name is not None:
+                customer.customer_name = name
+            
+            db.session.commit()
+            return jsonify({
+                'message': 'Subscriber updated',
+                'subscriber': {
+                    'id': customer.customer_id,
+                    'email': customer.email_address,
+                    'name': customer.customer_name or '',
+                    'createdAt': customer.created_at.isoformat() if customer.created_at else None
+                }
+            })
+        else:
+            from .storage import storage
+            customer = storage.update_subscriber(subscriber_id, email=email, name=name)
+            if not customer:
+                return jsonify({'message': 'Subscriber not found'}), 404
+            return jsonify({
+                'message': 'Subscriber updated',
+                'subscriber': {
+                    'id': customer.id,
+                    'email': customer.email,
+                    'name': customer.name or '',
+                    'createdAt': customer.created_at.isoformat() if customer.created_at else None
+                }
+            })
+    except Exception:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
+        return jsonify({'message': 'Failed to update subscriber'}), 500
+
+
 @api.route('/newsletter', methods=['POST'])
 def subscribe_newsletter():
     """Subscribe an email address to the newsletter.

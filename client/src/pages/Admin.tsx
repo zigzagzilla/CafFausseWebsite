@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 // Generate time slots for the form
 const timeSlots = generateTimeSlots();
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Newspaper } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Newspaper, Pencil, X, Check } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
 
 type NewsletterSubscriber = {
@@ -23,6 +23,12 @@ type NewsletterSubscriber = {
   name: string;
   createdAt: string | null;
 };
+
+type EditingSubscriber = {
+  id: number;
+  email: string;
+  name: string;
+} | null;
 
 function timeLabelTo24Hour(timeLabel: string): string {
   const trimmed = timeLabel.trim();
@@ -85,6 +91,40 @@ const Admin = () => {
   // Fetch newsletter subscribers
   const { data: subscribers = [], isLoading: isLoadingSubscribers } = useQuery<NewsletterSubscriber[]>({
     queryKey: ["/api/newsletter/subscribers"],
+  });
+
+  // State for editing subscriber
+  const [editingSubscriber, setEditingSubscriber] = useState<EditingSubscriber>(null);
+
+  // Update subscriber mutation
+  const updateSubscriberMutation = useMutation({
+    mutationFn: async ({ id, email, name }: { id: number; email: string; name: string }) => {
+      const response = await fetch(`/api/newsletter/subscribers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ email, name }),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update subscriber");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/newsletter/subscribers"] });
+      setEditingSubscriber(null);
+      toast({
+        title: "Subscriber updated",
+        description: "The subscriber information has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   // Create reservation mutation - must be declared before any conditional returns
@@ -506,20 +546,83 @@ const Admin = () => {
                         key={subscriber.id}
                         className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center gap-3">
-                          <Mail className="h-5 w-5 text-[#8A2633]" />
-                          <div>
-                            <p className="font-medium text-[#333333]">{subscriber.email}</p>
-                            {subscriber.name && (
-                              <p className="text-sm text-[#666666]">{subscriber.name}</p>
-                            )}
-                            {subscriber.createdAt && (
-                              <p className="text-xs text-[#999999]">
-                                Subscribed: {new Date(subscriber.createdAt).toLocaleDateString()}
-                              </p>
-                            )}
+                        {editingSubscriber?.id === subscriber.id ? (
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor={`email-${subscriber.id}`}>Email</Label>
+                              <Input
+                                id={`email-${subscriber.id}`}
+                                type="email"
+                                value={editingSubscriber.email}
+                                onChange={(e) => setEditingSubscriber({
+                                  ...editingSubscriber,
+                                  email: e.target.value
+                                })}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`name-${subscriber.id}`}>Name</Label>
+                              <Input
+                                id={`name-${subscriber.id}`}
+                                type="text"
+                                value={editingSubscriber.name}
+                                onChange={(e) => setEditingSubscriber({
+                                  ...editingSubscriber,
+                                  name: e.target.value
+                                })}
+                                placeholder="Optional"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updateSubscriberMutation.mutate(editingSubscriber)}
+                                disabled={updateSubscriberMutation.isPending}
+                                className="bg-[#8A2633] hover:bg-[#722127]"
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                {updateSubscriberMutation.isPending ? "Saving..." : "Save"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingSubscriber(null)}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Mail className="h-5 w-5 text-[#8A2633]" />
+                              <div>
+                                <p className="font-medium text-[#333333]">{subscriber.email}</p>
+                                {subscriber.name && (
+                                  <p className="text-sm text-[#666666]">{subscriber.name}</p>
+                                )}
+                                {subscriber.createdAt && (
+                                  <p className="text-xs text-[#999999]">
+                                    Subscribed: {new Date(subscriber.createdAt).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingSubscriber({
+                                id: subscriber.id,
+                                email: subscriber.email,
+                                name: subscriber.name
+                              })}
+                              className="text-[#8A2633] hover:text-[#722127]"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

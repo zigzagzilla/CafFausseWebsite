@@ -110,6 +110,17 @@ class MemStorage:
         """Get all customers who have signed up for the newsletter."""
         return [c for c in self.customers.values() if c.newsletter_signup]
 
+    def update_subscriber(self, customer_id: int, email: Optional[str] = None, name: Optional[str] = None) -> Optional[Customer]:
+        """Update a newsletter subscriber's information."""
+        customer = self.customers.get(customer_id)
+        if not customer:
+            return None
+        if email:
+            customer.email = email
+        if name is not None:
+            customer.name = name
+        return customer
+
     def subscribe_newsletter(self, email_address: str) -> Customer:
         # If we don't know the name yet, keep blank
         c = self.get_customer_by_email(email_address)
