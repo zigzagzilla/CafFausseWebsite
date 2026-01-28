@@ -25,6 +25,37 @@ def get_menu():
     return jsonify(menu_items)
 
 
+@api.route('/newsletter/subscribers', methods=['GET'])
+def get_newsletter_subscribers():
+    """Get all newsletter subscribers for admin panel."""
+    try:
+        if is_db_connected():
+            from .database import db
+            from .models import Customer
+            
+            subscribers = db.session.execute(
+                select(Customer).where(Customer.newsletter_signup == True)
+            ).scalars().all()
+            
+            return jsonify([{
+                'id': s.customer_id,
+                'email': s.email_address,
+                'name': s.customer_name or '',
+                'createdAt': s.created_at.isoformat() if s.created_at else None
+            } for s in subscribers])
+        else:
+            from .storage import storage
+            subscribers = storage.get_newsletter_subscribers()
+            return jsonify([{
+                'id': s.id,
+                'email': s.email,
+                'name': s.name or '',
+                'createdAt': s.created_at.isoformat() if s.created_at else None
+            } for s in subscribers])
+    except Exception:
+        return jsonify({'message': 'Failed to fetch subscribers'}), 500
+
+
 @api.route('/newsletter', methods=['POST'])
 def subscribe_newsletter():
     """Subscribe an email address to the newsletter.

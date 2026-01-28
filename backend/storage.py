@@ -106,6 +106,10 @@ class MemStorage:
         return c
 
     # Newsletter
+    def get_newsletter_subscribers(self) -> List[Customer]:
+        """Get all customers who have signed up for the newsletter."""
+        return [c for c in self.customers.values() if c.newsletter_signup]
+
     def subscribe_newsletter(self, email_address: str) -> Customer:
         # If we don't know the name yet, keep blank
         c = self.get_customer_by_email(email_address)

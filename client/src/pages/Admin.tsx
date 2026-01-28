@@ -14,8 +14,15 @@ import { cn } from "@/lib/utils";
 
 // Generate time slots for the form
 const timeSlots = generateTimeSlots();
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Newspaper } from "lucide-react";
 import type { Reservation, InsertReservation } from "@shared/schema";
+
+type NewsletterSubscriber = {
+  id: number;
+  email: string;
+  name: string;
+  createdAt: string | null;
+};
 
 function timeLabelTo24Hour(timeLabel: string): string {
   const trimmed = timeLabel.trim();
@@ -73,6 +80,11 @@ const Admin = () => {
   // Fetch all reservations - must be declared before any conditional returns
   const { data: reservations = [], isLoading } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations"],
+  });
+
+  // Fetch newsletter subscribers
+  const { data: subscribers = [], isLoading: isLoadingSubscribers } = useQuery<NewsletterSubscriber[]>({
+    queryKey: ["/api/newsletter/subscribers"],
   });
 
   // Create reservation mutation - must be declared before any conditional returns
@@ -264,9 +276,10 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="view" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="view">View Reservations</TabsTrigger>
             <TabsTrigger value="add">Add Reservation</TabsTrigger>
+            <TabsTrigger value="newsletter">Newsletter Subscribers</TabsTrigger>
           </TabsList>
 
           <TabsContent value="view">
@@ -467,6 +480,50 @@ const Admin = () => {
                     {createReservationMutation.isPending ? "Creating..." : "Create Reservation"}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="newsletter">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Newspaper className="h-5 w-5" />
+                  Newsletter Subscribers ({subscribers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingSubscribers ? (
+                  <div className="text-center py-8">Loading subscribers...</div>
+                ) : subscribers.length === 0 ? (
+                  <div className="text-center py-8 text-[#666666]">
+                    No newsletter subscribers yet
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {subscribers.map((subscriber) => (
+                      <div
+                        key={subscriber.id}
+                        className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Mail className="h-5 w-5 text-[#8A2633]" />
+                          <div>
+                            <p className="font-medium text-[#333333]">{subscriber.email}</p>
+                            {subscriber.name && (
+                              <p className="text-sm text-[#666666]">{subscriber.name}</p>
+                            )}
+                            {subscriber.createdAt && (
+                              <p className="text-xs text-[#999999]">
+                                Subscribed: {new Date(subscriber.createdAt).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
