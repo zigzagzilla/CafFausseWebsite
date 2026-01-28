@@ -16,7 +16,9 @@ def create_app():
     database_url = os.environ.get('DATABASE_URL')
     db_connected = False
     
+    print(f"DATABASE_URL exists: {bool(database_url)}")
     if database_url:
+        print(f"DATABASE_URL prefix: {database_url[:30]}..." if len(database_url) > 30 else f"DATABASE_URL: {database_url}")
         if database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
         
