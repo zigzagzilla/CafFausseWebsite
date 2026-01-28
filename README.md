@@ -49,6 +49,8 @@ The reservation system is implemented using a React form on the frontend and a F
 The admin panel is available at https://caf-fausse-website-zigzagzilla.replit.app/admin.
 Login - Use password: admin123
 
+Update: Encountered and fixed an issue with React component hooks (useState, useQuery, useMutation) placed after a conditional return statement."  
+
 4. Using the Application
 	•	Navigate through the site using the top navigation bar.
 	•	Create a reservation via the Reservations page.
