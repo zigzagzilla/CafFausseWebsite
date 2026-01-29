@@ -1,6 +1,6 @@
 # Cafe_Fausse
 
-Overview
+**Overview**
 
 Café Fausse is a full-stack web application developed as part of the Web Application & Interface Design course. The application serves as the digital front door for a fine-dining restaurant, allowing users to view the menu, learn about the restaurant, browse a gallery of images and awards, sign up for a newsletter, and make table reservations online.
 
@@ -59,7 +59,7 @@ Using the Application
 	•	Sign up for the newsletter using the email form.
 	•	Reservation and newsletter data will be stored in the PostgreSQL database.
 
-AI Tooling Disclosure
+**AI Tooling Disclosure**
 
 AI-assisted development tools were used to support this project in accordance with course guidance.
 	•	Replit.com was used as a development environment and for rapid prototyping (“vibe coding”), enabling quick iteration on UI components and backend scaffolding.
@@ -75,3 +75,84 @@ Notes
 	•	This project is intended as a development/demo application and is not hardened for production use.
 	•	Database tables are created automatically on application startup for convenience.
 	•	AI insisted on using node.js express rather than flask initially, and required significant rewrite cycles to ensure flask was used in both development and production environments--since it was in one and not the other, 				constant persistence errors surfaced.
+
+**Dependencies**
+
+System Requirements
+	•	Operating System: macOS, Windows, or Linux
+	•	Git: version 2.x or newer
+	•	Python: version 3.10 or newer
+	•	Node.js: version 18 or newer
+	•	npm: included with Node.js
+	•	PostgreSQL: version 13 or newer
+
+Backend Dependencies (Flask)
+
+The backend is implemented using Flask and SQLAlchemy. Dependencies are installed via pip using requirements.txt.
+
+Required Python packages:
+	•	Flask – Web framework used to implement REST API endpoints
+	•	Flask-CORS – Enables cross-origin requests from the React frontend
+	•	SQLAlchemy – ORM used to define models and interact with PostgreSQL
+	•	psycopg2-binary – PostgreSQL database adapter
+	•	python-dotenv – Loads environment variables such as DATABASE_URL
+
+Backend dependencies are installed with:
+
+pip install -r requirements.txt
+
+Frontend Dependencies (React)
+
+The frontend is implemented using React and built with Vite. All frontend dependencies are defined in client/package.json and installed via npm.
+
+Key frontend dependencies include:
+	•	React – Component-based UI library
+	•	React DOM – Renders React components in the browser
+	•	Vite – Development server and build tooling
+	•	React Router DOM – Client-side routing between pages
+	•	Tailwind CSS (or equivalent CSS tooling) – Responsive layout using Flexbox and Grid
+	•	TypeScript (if enabled) – Static typing for frontend code
+	•	Client-side validation libraries (e.g., Zod) – Form input validation
+
+Frontend dependencies are installed with:
+
+npm install
+
+Database Requirements
+	•	PostgreSQL is used for persistent data storage.
+	•	The application creates and uses the following tables:
+	•	customers
+	•	reservations
+	•	The reservation system enforces:
+	•	A maximum of 30 tables per time slot
+	•	Random assignment of available tables
+	•	Prevention of double bookings using database constraints
+
+The database connection is configured using the DATABASE_URL environment variable.
+
+Example:
+
+DATABASE_URL=postgresql://<user>:<password>@localhost:5432/cafe_fausse
+
+Running and Monitoring the Application
+
+Backend
+	•	Start the Flask backend with:
+
+python app.py
+	•	API endpoints can be monitored using:
+	•	Browser developer tools
+	•	Terminal logs
+	•	Tools such as curl, Postman, or similar REST clients
+
+Frontend
+	•	Start the React development server with:
+
+npm run dev
+	•	The UI can be inspected and monitored using browser developer tools (DOM, network requests, console logs).
+
+Database
+	•	PostgreSQL can be monitored using:
+	•	psql command-line tool
+	•	Database GUI tools such as pgAdmin
+	•	Database state can be inspected to verify that reservations and newsletter signups are being persisted correctly.
