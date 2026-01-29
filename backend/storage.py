@@ -105,6 +105,26 @@ class MemStorage:
         self.customer_id_counter += 1
         return c
 
+    # Customers
+    def get_all_customers(self) -> List[Customer]:
+        """Get all customers."""
+        return list(self.customers.values())
+
+    def update_customer(self, customer_id: int, data: dict) -> Optional[Customer]:
+        """Update a customer's information."""
+        customer = self.customers.get(customer_id)
+        if not customer:
+            return None
+        if 'name' in data:
+            customer.name = data['name'].strip()
+        if 'email' in data:
+            customer.email = data['email'].strip().lower()
+        if 'phone' in data:
+            customer.phone = data['phone'].strip() if data['phone'] else None
+        if 'newsletterSignup' in data:
+            customer.newsletter_signup = bool(data['newsletterSignup'])
+        return customer
+
     # Newsletter
     def get_newsletter_subscribers(self) -> List[Customer]:
         """Get all customers who have signed up for the newsletter."""

@@ -25,6 +25,114 @@ def get_menu():
     return jsonify(menu_items)
 
 
+@api.route('/customers', methods=['GET'])
+def get_customers():
+    """Get all customers for admin panel."""
+    try:
+        if is_db_connected():
+            from .database import db
+            from .models import Customer
+            
+            customers = db.session.execute(
+                select(Customer).order_by(Customer.customer_id)
+            ).scalars().all()
+            
+            return jsonify([c.to_dict() for c in customers])
+        else:
+            from .storage import storage
+            customers = storage.get_all_customers()
+            return jsonify([c.to_dict() for c in customers])
+    except Exception:
+        return jsonify({'message': 'Failed to fetch customers'}), 500
+
+
+@api.route('/customers/<int:customer_id>', methods=['PATCH'])
+def update_customer(customer_id):
+    """Update a customer's information."""
+    try:
+        data = request.get_json() or {}
+        
+        if is_db_connected():
+            from .database import db
+            from .models import Customer
+            
+            customer = db.session.get(Customer, customer_id)
+            if not customer:
+                return jsonify({'message': 'Customer not found'}), 404
+            
+            if 'name' in data:
+                customer.customer_name = data['name'].strip()
+            if 'email' in data:
+                customer.email_address = data['email'].strip().lower()
+            if 'phone' in data:
+                customer.phone_number = data['phone'].strip() if data['phone'] else None
+            if 'newsletterSignup' in data:
+                customer.newsletter_signup = bool(data['newsletterSignup'])
+            
+            db.session.commit()
+            return jsonify({'message': 'Customer updated', 'customer': customer.to_dict()})
+        else:
+            from .storage import storage
+            customer = storage.update_customer(customer_id, data)
+            if not customer:
+                return jsonify({'message': 'Customer not found'}), 404
+            return jsonify({'message': 'Customer updated', 'customer': customer.to_dict()})
+    except Exception:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
+        return jsonify({'message': 'Failed to update customer'}), 500
+
+
+@api.route('/customers', methods=['POST'])
+def create_customer():
+    """Create a new customer."""
+    try:
+        data = request.get_json() or {}
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip().lower()
+        phone = data.get('phone', '').strip() if data.get('phone') else None
+        newsletter = bool(data.get('newsletterSignup', False))
+        
+        if not email:
+            return jsonify({'message': 'Email is required'}), 400
+        
+        if is_db_connected():
+            from .database import db
+            from .models import Customer
+            
+            existing = db.session.execute(
+                select(Customer).where(Customer.email_address == email)
+            ).scalar_one_or_none()
+            
+            if existing:
+                return jsonify({'message': 'A customer with this email already exists'}), 409
+            
+            customer = Customer(
+                customer_name=name,
+                email_address=email,
+                phone_number=phone,
+                newsletter_signup=newsletter,
+            )
+            db.session.add(customer)
+            db.session.commit()
+            return jsonify({'message': 'Customer created', 'customer': customer.to_dict()}), 201
+        else:
+            from .storage import storage
+            customer = storage.create_or_update_customer(
+                customer_name=name,
+                email_address=email,
+                phone_number=phone,
+                newsletter_signup=newsletter
+            )
+            return jsonify({'message': 'Customer created', 'customer': customer.to_dict()}), 201
+    except Exception:
+        if is_db_connected():
+            from .database import db
+            db.session.rollback()
+        return jsonify({'message': 'Failed to create customer'}), 500
+
+
 @api.route('/newsletter/subscribers', methods=['GET'])
 def get_newsletter_subscribers():
     """Get all newsletter subscribers for admin panel."""

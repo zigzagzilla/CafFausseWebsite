@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 
 // Generate time slots for the form
 const timeSlots = generateTimeSlots();
-import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Newspaper, Pencil, X, Check } from "lucide-react";
+import { CalendarDays, Clock, Users, Mail, Phone, Trash2, Plus, Lock, Newspaper, Pencil, X, Check, UserCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Reservation, InsertReservation } from "@shared/schema";
 
 type NewsletterSubscriber = {
@@ -29,6 +30,30 @@ type EditingSubscriber = {
   email: string;
   name: string;
 } | null;
+
+type Customer = {
+  customerId: number;
+  customerName: string;
+  emailAddress: string;
+  phoneNumber: string | null;
+  newsletterSignup: boolean;
+  createdAt: string | null;
+};
+
+type EditingCustomer = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  newsletterSignup: boolean;
+} | null;
+
+type NewCustomer = {
+  name: string;
+  email: string;
+  phone: string;
+  newsletterSignup: boolean;
+};
 
 function timeLabelTo24Hour(timeLabel: string): string {
   const trimmed = timeLabel.trim();
@@ -98,6 +123,90 @@ const Admin = () => {
   
   // State for adding new subscriber
   const [newSubscriberEmail, setNewSubscriberEmail] = useState("");
+
+  // Customer-related state
+  const [editingCustomer, setEditingCustomer] = useState<EditingCustomer>(null);
+  const [newCustomer, setNewCustomer] = useState<NewCustomer>({
+    name: "",
+    email: "",
+    phone: "",
+    newsletterSignup: false
+  });
+
+  // Fetch all customers
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+
+  // Update customer mutation
+  const updateCustomerMutation = useMutation({
+    mutationFn: async (data: EditingCustomer) => {
+      if (!data) return;
+      const response = await fetch(`/api/customers/${data.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          newsletterSignup: data.newsletterSignup
+        }),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update customer");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/newsletter/subscribers"] });
+      setEditingCustomer(null);
+      toast({
+        title: "Customer updated",
+        description: "The customer information has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Create customer mutation
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: NewCustomer) => {
+      const response = await fetch("/api/customers", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create customer");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/newsletter/subscribers"] });
+      setNewCustomer({ name: "", email: "", phone: "", newsletterSignup: false });
+      toast({
+        title: "Customer created",
+        description: "The new customer has been added successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create customer",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
   // Update subscriber mutation
   const updateSubscriberMutation = useMutation({
@@ -350,10 +459,11 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="view" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="view">View Reservations</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="view">Reservations</TabsTrigger>
             <TabsTrigger value="add">Add Reservation</TabsTrigger>
-            <TabsTrigger value="newsletter">Newsletter Subscribers</TabsTrigger>
+            <TabsTrigger value="customers">Customers</TabsTrigger>
+            <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
           </TabsList>
 
           <TabsContent value="view">
@@ -554,6 +664,200 @@ const Admin = () => {
                     {createReservationMutation.isPending ? "Creating..." : "Create Reservation"}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="customers">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Add New Customer
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newCustomer.email.trim()) {
+                      createCustomerMutation.mutate(newCustomer);
+                    }
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div>
+                    <Label htmlFor="new-customer-name">Name</Label>
+                    <Input
+                      id="new-customer-name"
+                      type="text"
+                      placeholder="Customer name"
+                      value={newCustomer.name}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-customer-email">Email *</Label>
+                    <Input
+                      id="new-customer-email"
+                      type="email"
+                      placeholder="Email address"
+                      value={newCustomer.email}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-customer-phone">Phone</Label>
+                    <Input
+                      id="new-customer-phone"
+                      type="tel"
+                      placeholder="Phone number"
+                      value={newCustomer.phone}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-6">
+                    <Checkbox
+                      id="new-customer-newsletter"
+                      checked={newCustomer.newsletterSignup}
+                      onCheckedChange={(checked) => setNewCustomer({ ...newCustomer, newsletterSignup: !!checked })}
+                    />
+                    <Label htmlFor="new-customer-newsletter" className="cursor-pointer">Newsletter Subscriber</Label>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Button
+                      type="submit"
+                      disabled={createCustomerMutation.isPending}
+                      className="bg-[#8A2633] hover:bg-[#722127]"
+                    >
+                      {createCustomerMutation.isPending ? "Creating..." : "Add Customer"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  All Customers ({customers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingCustomers ? (
+                  <div className="text-center py-8">Loading customers...</div>
+                ) : customers.length === 0 ? (
+                  <div className="text-center py-8 text-[#666666]">
+                    No customers yet
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b text-left">
+                          <th className="p-2 font-semibold text-[#333]">ID</th>
+                          <th className="p-2 font-semibold text-[#333]">Name</th>
+                          <th className="p-2 font-semibold text-[#333]">Email</th>
+                          <th className="p-2 font-semibold text-[#333]">Phone</th>
+                          <th className="p-2 font-semibold text-[#333]">Newsletter</th>
+                          <th className="p-2 font-semibold text-[#333]">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customers.map((customer) => (
+                          <tr key={customer.customerId} className="border-b hover:bg-gray-50">
+                            {editingCustomer?.id === customer.customerId ? (
+                              <>
+                                <td className="p-2 text-[#666]">{customer.customerId}</td>
+                                <td className="p-2">
+                                  <Input
+                                    type="text"
+                                    value={editingCustomer.name}
+                                    onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value })}
+                                    className="w-full"
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <Input
+                                    type="email"
+                                    value={editingCustomer.email}
+                                    onChange={(e) => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
+                                    className="w-full"
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <Input
+                                    type="tel"
+                                    value={editingCustomer.phone}
+                                    onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
+                                    className="w-full"
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <Checkbox
+                                    checked={editingCustomer.newsletterSignup}
+                                    onCheckedChange={(checked) => setEditingCustomer({ ...editingCustomer, newsletterSignup: !!checked })}
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => updateCustomerMutation.mutate(editingCustomer)}
+                                      disabled={updateCustomerMutation.isPending}
+                                      className="bg-[#8A2633] hover:bg-[#722127]"
+                                    >
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setEditingCustomer(null)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="p-2 text-[#666]">{customer.customerId}</td>
+                                <td className="p-2">{customer.customerName || '-'}</td>
+                                <td className="p-2">{customer.emailAddress}</td>
+                                <td className="p-2">{customer.phoneNumber || '-'}</td>
+                                <td className="p-2">
+                                  {customer.newsletterSignup ? (
+                                    <Badge className="bg-green-100 text-green-800">Yes</Badge>
+                                  ) : (
+                                    <Badge variant="outline">No</Badge>
+                                  )}
+                                </td>
+                                <td className="p-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingCustomer({
+                                      id: customer.customerId,
+                                      name: customer.customerName || '',
+                                      email: customer.emailAddress,
+                                      phone: customer.phoneNumber || '',
+                                      newsletterSignup: customer.newsletterSignup
+                                    })}
+                                    className="text-[#8A2633] hover:text-[#722127]"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
