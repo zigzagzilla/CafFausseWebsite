@@ -6,6 +6,8 @@ Café Fausse is a full-stack web application developed as part of the Web Applic
 
 The project was built to meet the functional and non-functional requirements defined in the provided Software Requirements Specification (SRS), with particular emphasis on clean UI/UX design, responsive layout, and full front-end/back-end integration.
 
+The proto-production environment is viewable at: https://caf-fausse-website-zigzagzilla.replit.app
+
 Technology Stack
 
 Front End
